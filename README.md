@@ -5,3 +5,5 @@ code for our project
 
 elliot testar hej
 FUNGERAR DETTA ?!?!?!??!?!?!?
+
+FUNGERAR DET FÖR DIG SAMUEL?

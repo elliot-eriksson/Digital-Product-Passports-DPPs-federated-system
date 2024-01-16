@@ -1,0 +1,14 @@
+None Sensitive Part:
+		Produktnamn
+		produktID
+		linkmadefrom
+		Tillverkare
+		länk till sensitive: CID
+		länk till EVENTS: IPNS ADDRESS
+		
+	Sensitive Part: CID
+		kol = 0.8
+		järn = 0.2
+		Linkmakes
+	
+	Events: (IPNS MUTABLE)

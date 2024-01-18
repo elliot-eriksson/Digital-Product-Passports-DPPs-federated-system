@@ -19,7 +19,7 @@ func main() {
 	// fmt.Println("Password: ")
 	// fmt.Scanln(&password)
 	var database string = "LKAB_DB"
-	var collection string = "LKAB_MainTable"
+	var Collection string = "LKAB_MainTable"
 
 	// Use the SetServerAPIOptions() method to set the Stable API version to 1
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
@@ -29,8 +29,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	coll := client.Database(database).Collection(collection)
+	db := client.Database(database)
+	fmt.Println(db)
+	Coll := db.Collection(Collection)
+	fmt.Println(Coll)
 	var i int
 	fmt.Println("What do you want to do? 1: Createpassport, 2: Remanufacture events for passports")
 	fmt.Scan(&i)
@@ -43,7 +45,7 @@ func main() {
 		fmt.Println(doc)
 		var ctx = context.TODO()
 
-		insertResult, err := coll.InsertOne(ctx, doc)
+		insertResult, err := Coll.InsertOne(ctx, doc)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -55,44 +57,9 @@ func main() {
 		}()
 		fmt.Println(insertResult)
 	case 2:
-		//remanufacture
-
+		RemanufactureEvent(Coll, "65a8f9c45a1a8a3ddf32c503", "den e cool naijs")
 	default:
 		fmt.Println("xdd")
 	}
 
 }
-
-/*package main
-
-	// Convert the string representation of ObjectID to primitive.ObjectID
-	objectID, err := primitive.ObjectIDFromHex("your_object_id_as_string")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Define a filter to find a document by its ObjectID
-	filter := bson.D{{"_id", objectID}}
-
-	// Perform the find operation to get a single document
-	var result Passport
-	err = collection.FindOne(context.Background(), filter).Decode(&result)
-	if err == mongo.ErrNoDocuments {
-		fmt.Println("No matching document found.")
-		return
-	} else if err != nil {
-		log.Fatal(err)
-	}
-
-	// Print the retrieved document
-	fmt.Printf("ID: %s, ItemID: %d, ItemName: %s, Origin: %s\n", result.ID.Hex(), result.ItemID, result.ItemName, result.Origin)
-
-	// Close the MongoDB connection
-	err = client.Disconnect(context.Background())
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Disconnected from MongoDB!")
-}
-
-}*/

@@ -1,13 +1,17 @@
 package main
 
-//"time"
+import (
+	"context"
+	"fmt"
+	"log"
 
-//"go.mongodb.org/mongo-driver/bson"
-//"go.mongodb.org/mongo-driver/bson/primitive"
-//"go.mongodb.org/mongo-driver/mongo"
-//"go.mongodb.org/mongo-driver/mongo/options"
+	//"log"
+	"go.mongodb.org/mongo-driver/mongo"
+	//"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
-// Funktion för att skapa ett passport.
 // TODO: Ändra så att funktionen tar query parametrar istället för hårdkodad data
 func Createpassport() PassPort {
 	Passport := PassPort{
@@ -22,9 +26,16 @@ func Createpassport() PassPort {
 	return Passport
 }
 
-// Funktion för att lägga till remanufacture event till ett item
-/*func RemanufactureEvents() {
+func RemanufactureEvent(Coll *mongo.Collection, mongoid string, RemanEvent string) {
+	id, _ := primitive.ObjectIDFromHex(mongoid)
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$push", Value: bson.D{{Key: "LinkEvents", Value: RemanEvent}}}}
 
-	var NewEvent = fmt.Scan()
+	result, err := Coll.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-}*/
+	fmt.Printf("Documents matched: %v\n", result.MatchedCount)
+	fmt.Printf("Documents updated: %v\n", result.ModifiedCount)
+}

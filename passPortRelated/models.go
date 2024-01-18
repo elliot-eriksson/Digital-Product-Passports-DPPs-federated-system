@@ -4,7 +4,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Define a struct to represent the class
+// Definerar en struct för en produkt. ID är mongoDBs _id
 
 type PassPort struct {
 	ID           primitive.ObjectID `bson:"_id,omitempty"`
@@ -14,5 +14,6 @@ type PassPort struct {
 	IsNew        bool               `bson:"IsNew"`
 	LinkMadeFrom []string           `bson:"LinkMadeFrom"`
 	LinkMakes    []string           `bson:"LinkMakes"`
+	LinkEvents   []string           `bson:"LinkEvents"`
 	CreationDate string             `bson:"CreationDate"`
 }

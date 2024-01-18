@@ -1,9 +1,12 @@
 package main
 
+//passAdmin passAdmin
+//
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -11,14 +14,14 @@ import (
 )
 
 func main() {
-	var username, password string = "", ""
+	var username, password string = "passAdmin", "passAdmin"
 	var itemID int
 	// fmt.Println("Username: ")
 	// fmt.Scanln(&username)
 	// fmt.Println("Password: ")
 	// fmt.Scanln(&password)
-	var database string = "Test"
-	var collection string = username
+	var database string = "LKAB_DB"
+	var collection string = "LKAB_MainTable"
 	fmt.Println("ItemID: ")
 	fmt.Scanln(&itemID)
 	// Use the SetServerAPIOptions() method to set the Stable API version to 1
@@ -26,6 +29,21 @@ func main() {
 	opts := options.Client().ApplyURI("mongodb+srv://" + username + ":" + password + "@digital-product-passpor.mjd4fio.mongodb.net/?retryWrites=true&w=majority").SetServerAPIOptions(serverAPI)
 	// Create a new client and connect to the server
 	client, err := mongo.Connect(context.TODO(), opts)
+	type Book struct {
+		Title  string
+		Author string
+	}
+	doc := Book{Title: "Boken", Author: "ian"}
+
+	var ctx = context.TODO()
+
+	//Createpassport()
+
+	insertResult, err := collection.InsertOne(ctx, doc)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	if err != nil {
 		panic(err)
 	}
@@ -55,3 +73,8 @@ func main() {
 	// }
 	// fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
 }
+
+/*insertResult, err := collection.InsertOne(ctx, passport)
+if err != nil {
+	log.Fatal(err)
+}*/

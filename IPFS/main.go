@@ -32,7 +32,6 @@ func readFile(sh *shell.Shell, cid string) (*string, error) {
 	}
 
 	text := string(bytes)
-
 	return &text, nil
 }
 
@@ -70,7 +69,7 @@ func main() {
 	}
 	fmt.Println("File added with CID:", cid)
 
-	cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"
+	// cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"
 	separator()
 
 	// 2. Read the file by using the generated CID
@@ -83,7 +82,7 @@ func main() {
 	fmt.Println("Content of the file:", *text)
 
 	separator()
-	cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"
+	// cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"
 	// 3. Download the file to your computer
 	fmt.Println("Downloading file")
 	err = downloadFile(sh, cid)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -201,7 +202,52 @@ func main() {
 
 	for _, value := range isSensitivePositionArray {
 		fmt.Println(resultD[value])
+		sensitiveArray = append(sensitiveArray, resultD[value])
+	}
+	return sensitiveArray
+}
+
+func main() {
+	var username, password string = "TestComp1", ""
+	// var database string = "Test"
+	// var collection string = username
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	opts := options.Client().ApplyURI("mongodb+srv://" + username + ":" + password + "@cluster0.qk8pnen.mongodb.net/?retryWrites=true&w=majority").SetServerAPIOptions(serverAPI)
+	client, err := mongo.Connect(context.TODO(), opts)
+	ctx := context.TODO()
+	if err != nil {
+		panic(err)
 	}
 
+	// Release resource when the main
+	// function is returned.
+	defer close(client, ctx)
+
+	// create a filter  of type interface,
+	// that stores bjson objects.
+	var filter interface{}
+	filter = bson.D{{"ItemID", 3}}
+
+	// call the query method with client, context,
+	// database name, collection  name, filter and option
+	// This method returns two bson values and error if any.
+	resultM, resultD, err := query(client, ctx, "Test", "TestComp1", filter)
+	// handle the errors.
+	if err != nil {
+		panic(err)
+	}
+
+	// getSensitiveData(fmt.Sprintf("%v", resultM["isSensitive"]), resultD)
+	sensitiveArray := getSensitiveData(fmt.Sprintf("%v", resultM["isSensitive"]), resultD, 1)
+	// fmt.Println(sensitiveArray)
+	jsonData, err := json.MarshalIndent(sensitiveArray, "", "   ")
+	// fmt.Printf("json %s\n", jsonData)
+
+	var upploadString string = string(encryptIt([]byte(jsonData), "hej"))
+	cid, err := ipfs(upploadString)
+
+	var ObjectID interface{} = resultM["_id"]
+
+	uploadCID(client, ctx, "Test", "TestComp1", cid, ObjectID)
 	ping(client, ctx)
 }

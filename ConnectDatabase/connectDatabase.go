@@ -1,4 +1,4 @@
-package main
+package ConnectDatabase
 
 import (
 	"context"
@@ -11,8 +11,9 @@ import (
 )
 
 func connectDatabase(database string, collection string, itemID int) (client *mongo.Client, err error) {
-	var username, password string = "TestComp1", "TestComp1"
-	fmt.Println("hej")
+
+	// var username, password string = "TestComp1", "TestComp1"
+	// fmt.Println("hej")
 
 	// fmt.Println("Username: ")
 	// fmt.Scanln(&username)
@@ -23,23 +24,23 @@ func connectDatabase(database string, collection string, itemID int) (client *mo
 	// fmt.Println("ItemID: ")
 	// fmt.Scanln(&itemID)
 	// Use the SetServerAPIOptions() method to set the Stable API version to 1
-	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	// opts := options.Client().ApplyURI("mongodb+srv://" + username + ":" + password + "@digital-product-passpor.mjd4fio.mongodb.net/?retryWrites=true&w=majority").SetServerAPIOptions(serverAPI)
-	// gamla här under
-	opts := options.Client().ApplyURI("mongodb+srv://" + username + ":" + password + "@cluster0.qk8pnen.mongodb.net/?retryWrites=true&w=majority").SetServerAPIOptions(serverAPI)
-	// Create a new client and connect to the server
-	client2, err2 := mongo.Connect(context.TODO(), opts)
-	fmt.Println("client innan", client2)
-	if err2 != nil {
-		fmt.Println("hej")
-		panic(err2)
-	}
-	defer func() {
-		if err = client2.Disconnect(context.TODO()); err2 != nil {
-			panic(err2)
-		}
-	}()
-	return client2, err2
+	// serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	// // opts := options.Client().ApplyURI("mongodb+srv://" + username + ":" + password + "@digital-product-passpor.mjd4fio.mongodb.net/?retryWrites=true&w=majority").SetServerAPIOptions(serverAPI)
+	// // gamla här under
+	// opts := options.Client().ApplyURI("mongodb+srv://" + username + ":" + password + "@cluster0.qk8pnen.mongodb.net/?retryWrites=true&w=majority").SetServerAPIOptions(serverAPI)
+	// // Create a new client and connect to the server
+	// client2, err2 := mongo.Connect(context.TODO(), opts)
+	// fmt.Println("client innan", client2)
+	// if err2 != nil {
+	// 	fmt.Println("hej")
+	// 	panic(err2)
+	// }
+	// defer func() {
+	// 	if err = client2.Disconnect(context.TODO()); err2 != nil {
+	// 		panic(err2)
+	// 	}
+	// }()
+	// return client2, err2
 
 	// var keyPhrase string = "hej"
 	// fmt.Println("-------------string format...............")

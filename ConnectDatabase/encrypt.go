@@ -1,4 +1,4 @@
-package main
+package ConnectDatabase
 
 import (
 	"fmt"

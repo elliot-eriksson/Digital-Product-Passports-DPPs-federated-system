@@ -1,7 +1,5 @@
 package main
 
-//passAdmin passAdmin
-//
 import (
 	"context"
 	"fmt"
@@ -13,11 +11,7 @@ import (
 
 func main() {
 	var username, password string = "passAdmin", "passAdmin"
-	var itemID int
-	// fmt.Println("Username: ")
-	// fmt.Scanln(&username)
-	// fmt.Println("Password: ")
-	// fmt.Scanln(&password)
+
 	var database string = "LKAB_DB"
 	var Collection string = "LKAB_MainTable"
 
@@ -39,9 +33,21 @@ func main() {
 	switch i {
 	case 1:
 
-		fmt.Println("ItemID: ")
-		fmt.Scanln(&itemID)
-		doc := Createpassport()
+		fmt.Println("Enter item name : ")
+		var ItemN string
+		fmt.Scan(&ItemN)
+		fmt.Println("Enter item origin : ")
+		var OriginN string
+		fmt.Scan(&OriginN)
+
+		highestItemID, err := GetHighestItemID(client, database, Collection)
+		if err != nil {
+			log.Fatal("Error getting highest itemid:", err)
+		}
+
+		log.Println("Highest ItemID:", highestItemID)
+
+		doc := Createpassport(ItemN, OriginN, highestItemID)
 		fmt.Println(doc)
 		var ctx = context.TODO()
 
@@ -56,10 +62,18 @@ func main() {
 			}
 		}()
 		fmt.Println(insertResult)
-	case 2:
-		RemanufactureEvent(Coll, "65a8f9c45a1a8a3ddf32c503", "den e cool naijs")
+
+		// skapa string för att lägga kommentar för vad som hänt
+		// passera objectid för specifik product
+	/*case 2:
+	fmt.Println("Enter what has been updated on this certain product :")
+	var RemanEvent string
+	fmt.Scan(&RemanEvent)
+	RemanufactureEvent(Coll, "65ae752266c6e05505af226c", RemanEvent)
+	*/
 	default:
 		fmt.Println("xdd")
+
 	}
 
 }

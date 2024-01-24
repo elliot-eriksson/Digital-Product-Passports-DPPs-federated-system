@@ -11,11 +11,18 @@ import (
 )
 
 // Paste here the local path of your computer where the file will be downloaded
-const YourLocalPath = "C:/Users/Ellio/Desktop/test"
+const YourLocalPath = "C:/Users/boink/Desktop/test"
 
 // Paste here your public key
 // Go to powershell run the following command: ipfs key list -l
-const YourPublicKey = "k51qzi5uqu5dk93h4gqv2fml1x95vc92hbh6tr5atdo5fgc2623qvfak4o6qe3"
+const YourPublicKey = "k51qzi5uqu5djc71p3quno2nypbts7k7t14el81gwjpxsjksp25kbbl22n70rh"
+
+// // Paste here the local path of your computer where the file will be downloaded
+// const YourLocalPath = "C:/Users/Ellio/Desktop/test"
+
+// // Paste here your public key
+// // Go to powershell run the following command: ipfs key list -l
+// const YourPublicKey = "k51qzi5uqu5dk93h4gqv2fml1x95vc92hbh6tr5atdo5fgc2623qvfak4o6qe3"
 
 func addFile(sh *shell.Shell, text string) (string, error) {
 	return sh.Add(strings.NewReader(text))

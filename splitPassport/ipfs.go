@@ -93,7 +93,7 @@ func ipfs(upploadString string) (string, error) {
 		fmt.Println("Error downloading file:", err.Error())
 		return "", err
 	}
-	fmt.Println("File donwloaded")
+	fmt.Println("File downloaded")
 
 	return cid, err
 	// separator()

@@ -59,8 +59,8 @@ func main() {
 		panic(err)
 	}
 	// 1 for Sensitive Passport
-	uploadAndUpdateCID(1, resultM, resultD, client)
+	uploadAndUpdateCID(1, resultM, resultD, client, database, collection)
 	// 0 for Non Sensitive Passport
-	uploadAndUpdateCID(0, resultM, resultD, client)
+	uploadAndUpdateCID(0, resultM, resultD, client, database, collection)
 
 }

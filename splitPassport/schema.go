@@ -132,7 +132,7 @@ func passportMenu(client *mongo.Client, database, collection string) (itemID int
 		//funktionsanrop för att uppdatera en produkt med ett remanufacture event
 		//TODO: andra variabeln som skickas med i funktionen måste bytas ut med en dynamisk variabel "objectid" senare, är hårdkodad för nuvarandet med ett _id
 		//TODO: ska kunna hantera querys
-		var remanafactureProductID string = "65b103b5c0ba3fc65303b998"
+		var remanafactureProductID string = "65b1282112afb84376254117"
 		RemanufactureEvent(client, database, collection, remanafactureProductID, RemanEvent)
 
 	default:

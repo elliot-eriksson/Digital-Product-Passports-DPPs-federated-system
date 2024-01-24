@@ -18,27 +18,15 @@ func main() {
 		panic(err)
 	}
 
-	// Release resource when the main function is returned
-	defer close(client, ctx)
-
-	// create a filter of type interface,
-	// that stores bson objects.
 	var filter interface{}
-	var update interface{}
 	filter = bson.D{{"ItemID", 2}}
-
-	// Queries database to retrieve passports
-	// This method returns two bson values and error if any.
 	resultM, resultD, err := queryPassport(client, ctx, "Test", "TestComp1", filter)
 	if err != nil {
 		panic(err)
 	}
-
 	// 1 for Sensitive Passport
-	uploadAndUpdateCID(1, resultM, resultD, filter, update, client)
+	uploadAndUpdateCID(1, resultM, resultD, client)
 	// 0 for Non Sensitive Passport
-	uploadAndUpdateCID(0, resultM, resultD, filter, update, client)
-
-	ping(client, ctx)
+	uploadAndUpdateCID(0, resultM, resultD, client)
 
 }

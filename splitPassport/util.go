@@ -102,13 +102,13 @@ func getSensitiveData(inputString string, resultD bson.D, sensetive int) (sensit
 }
 
 // Uploads the passport to IPFS and calls updateDatabase(), where the filter is the CID
-func uploadAndUpdateCID(intSensitive int, resultM primitive.M, resultD primitive.D, filter interface{}, update interface{}, client *mongo.Client) {
+func uploadAndUpdateCID(intSensitive int, resultM primitive.M, resultD primitive.D, client *mongo.Client) {
 	sensitiveArray := getSensitiveData(fmt.Sprintf("%v", resultM["isSensitive"]), resultD, intSensitive)
 	jsonData := jsonFormat(sensitiveArray)
 	fmt.Printf("json %s\n", jsonData)
 
-	var filter_sen primitive.D
-
+	var filter primitive.D
+	var update interface{}
 	if json.Valid([]byte(jsonData)) {
 
 		var upploadString string = string(encryptIt([]byte(jsonData), "hej"))
@@ -118,14 +118,14 @@ func uploadAndUpdateCID(intSensitive int, resultM primitive.M, resultD primitive
 		}
 
 		if intSensitive == 0 {
-			filter_sen = bson.D{{"_id", resultM["_id"]}}
+			filter = bson.D{{"_id", resultM["_id"]}}
 			update = bson.D{{"$set", bson.D{{"CID", cid}}}}
 		} else {
-			filter_sen = bson.D{{"_id", resultM["_id"]}}
+			filter = bson.D{{"_id", resultM["_id"]}}
 			update = bson.D{{"$set", bson.D{{"CID_sen", cid}}}}
 		}
 
-		updateDatabase(client, context.TODO(), "Test", "TestComp1", filter_sen, update)
+		updateDatabase(client, context.TODO(), "Test", "TestComp1", filter, update)
 	} else {
 		fmt.Println("Not json valid")
 	}

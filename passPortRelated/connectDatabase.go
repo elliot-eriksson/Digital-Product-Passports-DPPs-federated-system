@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -65,12 +67,27 @@ func main() {
 
 		// skapa string för att lägga kommentar för vad som hänt
 		// passera objectid för specifik product
-	/*case 2:
-	fmt.Println("Enter what has been updated on this certain product :")
-	var RemanEvent string
-	fmt.Scan(&RemanEvent)
-	RemanufactureEvent(Coll, "65ae752266c6e05505af226c", RemanEvent)
-	*/
+	case 2:
+		// fmt.Println("Enter what has been updated on this certain product :")
+		// var RemanEvent string
+		// fmt.Scan(&RemanEvent)
+		// RemanufactureEvent(Coll, "65ae752266c6e05505af226c", RemanEvent)
+
+		fmt.Println("Enter what has been updated on this certain product:")
+		reader := bufio.NewReader(os.Stdin)
+		RemanEvent, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Error reading input:", err)
+			return
+		}
+
+		// Trim newline character from the end of the input
+		RemanEvent = RemanEvent[:len(RemanEvent)-1]
+
+		// Now you can use RemanEvent in your function
+		fmt.Println("You entered:", RemanEvent)
+		RemanufactureEvent(Coll, "65ae752266c6e05505af226c", RemanEvent)
+
 	default:
 		fmt.Println("xdd")
 

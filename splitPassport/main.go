@@ -73,15 +73,16 @@ func getSensitiveData(inputString string, resultD bson.D, sensetive int) (sensit
 		}
 	}
 	var sensitiveArray bson.A
+	fmt.Println("sensetiveArray 1 : ", sensitiveArray)
 	for _, value := range isSensitivePositionArray {
-		fmt.Println(resultD[value])
+		fmt.Println("resultD value: ", resultD[value])
 		sensitiveArray = append(sensitiveArray, resultD[value])
 	}
 	return sensitiveArray
 }
 
 func main() {
-	var username, password string = "TestComp1", ""
+	var username, password string = "TestComp1", "TestComp1"
 	// var database string = "Test"
 	// var collection string = username
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
@@ -99,7 +100,7 @@ func main() {
 	// create a filter  of type interface,
 	// that stores bjson objects.
 	var filter interface{}
-	filter = bson.D{{"ItemID", 3}}
+	filter = bson.D{{"ItemID", 2}}
 
 	// call the query method with client, context,
 	// database name, collection  name, filter and option
@@ -110,18 +111,36 @@ func main() {
 		panic(err)
 	}
 
-	// getSensitiveData(fmt.Sprintf("%v", resultM["isSensitive"]), resultD)
 	sensitiveArray := getSensitiveData(fmt.Sprintf("%v", resultM["isSensitive"]), resultD, 1)
-	// fmt.Println(sensitiveArray)
-	jsonData, err := json.MarshalIndent(sensitiveArray, "", "   ")
-	// fmt.Printf("json %s\n", jsonData)
+	jsonData := jsonFormat(sensitiveArray)
+	fmt.Printf("json %s\n", jsonData)
+	if json.Valid([]byte(jsonData)) {
+		var upploadString string = string(encryptIt([]byte(jsonData), "hej"))
+		cid, err := ipfs(upploadString)
+		if err != nil {
+			panic(err)
+		}
+		var ObjectID interface{} = resultM["_id"]
 
-	var upploadString string = string(encryptIt([]byte(jsonData), "hej"))
-	cid, err := ipfs(upploadString)
+		uploadCID(client, ctx, "Test", "TestComp1", cid, ObjectID)
+	} else {
+		fmt.Println("Not json valid")
+	}
+	// resultM, resultD, err = query(client, ctx, "Test", "TestComp1", filter)
+	// nonSensitiveArray := getSensitiveData(fmt.Sprintf("%v", resultM["isSensitive"]), resultD, 1)
+	// jsonData = jsonFormat(nonSensitiveArray)
+	// if json.Valid([]byte(jsonData)) {
+	// 	var upploadString string = string(encryptIt([]byte(jsonData), "mindre hej"))
+	// 	cid, err := ipfs(upploadString)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	var ObjectID interface{} = resultM["_id"]
 
-	var ObjectID interface{} = resultM["_id"]
+	// 	uploadCID(client, ctx, "Test", "TestComp1", cid, ObjectID)
+	// } else {
+	// 	fmt.Println("Not json valid")
 
-	uploadCID(client, ctx, "Test", "TestComp1", cid, ObjectID)
 	ping(client, ctx)
 
 }

@@ -40,7 +40,7 @@ func GetHighestItemID(client *mongo.Client, dbName, collectionName string) (int,
 }
 
 // TODO: Ändra så att funktionen tar query parametrar istället för hårdkodad data
-func Createpassport(ItemN string, OriginN string, client *mongo.Client, database, collection string, SensitiveArray []int, LinkMadeFromN []string, LinkMakesN []string) {
+func Createpassport(ItemN string, OriginN string, client *mongo.Client, database, collection string, SensitiveArray []string, LinkMadeFromN []string, LinkMakesN []string) (itemID int) {
 	//funktionsanrop för att hämta det nuvarande högsta mongodb passport _id i databasen
 	highestItemID, err := GetHighestItemID(client, database, collection)
 	if err != nil {
@@ -71,12 +71,13 @@ func Createpassport(ItemN string, OriginN string, client *mongo.Client, database
 	}
 
 	//ser till att vi disconnectar från databasen även om ett error skulle förekomma vid insert till databas
-	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
+	// defer func() {
+	// 	if err = client.Disconnect(context.TODO()); err != nil {
+	// 		panic(err)
+	// 	}
+	// }()
 	fmt.Println(insertResult)
+	return highestItemID + 1
 
 }
 
@@ -94,7 +95,7 @@ func RemanufactureEvent(client *mongo.Client, database, collection, mongoid stri
 	fmt.Printf("Documents matched: %v\n", result.MatchedCount)
 	fmt.Printf("Documents updated: %v\n", result.ModifiedCount)
 }
-func passportMenu(client *mongo.Client, database, collection string) {
+func passportMenu(client *mongo.Client, database, collection string) (itemID int) {
 	//temporär input för test ändamål, ska ändras framöver för att kunna göras via hemsida/program etc
 	var i int
 	fmt.Println("What do you want to do? 1: Createpassport, 2: Remanufacture events for passports")
@@ -108,13 +109,13 @@ func passportMenu(client *mongo.Client, database, collection string) {
 		fmt.Scan(&ItemN)
 		fmt.Println("Enter item origin : ")
 		fmt.Scan(&OriginN)
-		sensitiveArray := []int{0, 0, 0, 0, 0, 1, 1, 1, 1}
+		sensitiveArray := []string{"0", "0", "0", "0", "0", "1", "1", "1", "1", "1"}
 		LinkMadeFrom := []string{"a", "b", "c", "d", "e", "f"}
 		LinkMakes := []string{}
 
 		//funktionsanrop för att skapa passport.
 		//TODO: ska kunna hantera querys senare
-		Createpassport(ItemN, OriginN, client, database, collection, sensitiveArray, LinkMadeFrom, LinkMakes)
+		return Createpassport(ItemN, OriginN, client, database, collection, sensitiveArray, LinkMadeFrom, LinkMakes)
 	case 2:
 
 		//testinput för att lägga till ett remanufacture event till en produkt
@@ -138,4 +139,5 @@ func passportMenu(client *mongo.Client, database, collection string) {
 		fmt.Println("xdd")
 
 	}
+	return
 }

@@ -15,6 +15,6 @@ type PassPort struct {
 	LinkMadeFrom []string           `bson:"LinkMadeFrom"`  //LinkMadeFrom ska vara länkar till exempelvis stål och trä som används i en spade
 	LinkMakes    []string           `bson:"LinkMakes"`     //LinkMakes blir LinkMadeFrom fast för andra hållet alltså att stålet går till spaden
 	LinkEvents   []string           `bson:"LinkEvents"`    //LinkEvents är eventen som kan hända exempelvis att en bil repareras etc
-	Sensitive    []int              `bson:"Sensitive"`     //Sensitive är en array som kommer ändras beroende på om data ska kunna visas av privatpersoner etc
+	Sensitive    []string           `bson:"Sensitive"`     //Sensitive är en array som kommer ändras beroende på om data ska kunna visas av privatpersoner etc
 	CreationDate string             `bson:"CreationDate"`  //CreationDate skapas vid skapningen av produkten alltså dagens datum.
 }

@@ -74,7 +74,6 @@ func updateDatabase(client *mongo.Client, ctx context.Context, dataBase, col str
 func getSensitiveData(inputString string, resultD bson.D, sensetive int) (sensitiveArray2 bson.A) {
 	re := regexp.MustCompile("\\d+")
 	matches := re.FindAllString(inputString, -1)
-
 	var intArray []int
 	for _, match := range matches {
 		num, err := strconv.Atoi(match)
@@ -92,6 +91,7 @@ func getSensitiveData(inputString string, resultD bson.D, sensetive int) (sensit
 			splitSensitiveAndNonSensitive = append(splitSensitiveAndNonSensitive, i)
 		}
 	}
+
 	// Array with the values of either sensitive or nonsensitive
 	var sensitiveArray bson.A
 	fmt.Println("sensitiveArray 1 : ", sensitiveArray)
@@ -103,7 +103,7 @@ func getSensitiveData(inputString string, resultD bson.D, sensetive int) (sensit
 
 // Uploads the passport to IPFS and calls updateDatabase(), where the filter is the CID
 func uploadAndUpdateCID(intSensitive int, resultM primitive.M, resultD primitive.D, client *mongo.Client) {
-	sensitiveArray := getSensitiveData(fmt.Sprintf("%v", resultM["isSensitive"]), resultD, intSensitive)
+	sensitiveArray := getSensitiveData(fmt.Sprintf("%v", resultM["Sensitive"]), resultD, intSensitive)
 	jsonData := jsonFormat(sensitiveArray)
 	fmt.Printf("json %s\n", jsonData)
 

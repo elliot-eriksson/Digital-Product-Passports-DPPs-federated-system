@@ -20,73 +20,49 @@ func main() {
 	// Use the SetServerAPIOptions() method to set the Stable API version to 1
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI("mongodb+srv://" + username + ":" + password + "@digital-product-passpor.mjd4fio.mongodb.net/?retryWrites=true&w=majority").SetServerAPIOptions(serverAPI)
-	// Create a new client and connect to the server
+	// Skapar en client och koppling till servern
 	client, err := mongo.Connect(context.TODO(), opts)
 	if err != nil {
 		log.Fatal(err)
 	}
-	db := client.Database(database)
-	fmt.Println(db)
-	Coll := db.Collection(Collection)
-	fmt.Println(Coll)
+
+	Coll := client.Database(database).Collection(Collection)
+
+	//temporär input för test ändamål, ska ändras framöver för att kunna göras via hemsida/program etc
 	var i int
 	fmt.Println("What do you want to do? 1: Createpassport, 2: Remanufacture events for passports")
 	fmt.Scan(&i)
 	switch i {
 	case 1:
 
+		//testinput av item name samt item origin
+		var ItemN, OriginN string
 		fmt.Println("Enter item name : ")
-		var ItemN string
 		fmt.Scan(&ItemN)
 		fmt.Println("Enter item origin : ")
-		var OriginN string
 		fmt.Scan(&OriginN)
+		sensitiveArray := []int{1, 1, 1, 1, 1, 1, 1, 1, 1}
 
-		highestItemID, err := GetHighestItemID(client, database, Collection)
-		if err != nil {
-			log.Fatal("Error getting highest itemid:", err)
-		}
-
-		log.Println("Highest ItemID:", highestItemID)
-
-		doc := Createpassport(ItemN, OriginN, highestItemID)
-		fmt.Println(doc)
-		var ctx = context.TODO()
-
-		insertResult, err := Coll.InsertOne(ctx, doc)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		defer func() {
-			if err = client.Disconnect(context.TODO()); err != nil {
-				panic(err)
-			}
-		}()
-		fmt.Println(insertResult)
-
-		// skapa string för att lägga kommentar för vad som hänt
-		// passera objectid för specifik product
+		//funktionsanrop för att skapa passport.
+		//TODO: ska kunna hantera querys senare
+		Createpassport(ItemN, OriginN, client, database, Collection, sensitiveArray)
 	case 2:
-		// fmt.Println("Enter what has been updated on this certain product :")
-		// var RemanEvent string
-		// fmt.Scan(&RemanEvent)
-		// RemanufactureEvent(Coll, "65ae752266c6e05505af226c", RemanEvent)
 
+		//testinput för att lägga till ett remanufacture event till en produkt
 		fmt.Println("Enter what has been updated on this certain product:")
+		fmt.Scan("")
 		reader := bufio.NewReader(os.Stdin)
 		RemanEvent, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Println("Error reading input:", err)
 			return
 		}
-
-		// Trim newline character from the end of the input
 		RemanEvent = RemanEvent[:len(RemanEvent)-1]
 
-		// Now you can use RemanEvent in your function
-		fmt.Println("You entered:", RemanEvent)
-		RemanufactureEvent(Coll, "65ae752266c6e05505af226c", RemanEvent)
+		//funktionsanrop för att uppdatera en produkt med ett remanufacture event
+		//TODO: andra variabeln som skickas med i funktionen måste bytas ut med en dynamisk variabel "objectid" senare, är hårdkodad för nuvarandet med ett _id
+		//TODO: ska kunna hantera querys
+		RemanufactureEvent(Coll, "65b103b5c0ba3fc65303b998", RemanEvent)
 
 	default:
 		fmt.Println("xdd")

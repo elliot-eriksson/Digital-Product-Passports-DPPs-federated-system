@@ -20,6 +20,7 @@ func mdHashing(input string) string {
 	return hex.EncodeToString(md5Hash[:]) // by referring to it as a string
 }
 
+// Encrypts the data using AES encoding
 func encryptIt(value []byte, key string) []byte {
 	aesBlock, err := aes.NewCipher([]byte(mdHashing(key)))
 	if err != nil {
@@ -39,6 +40,7 @@ func encryptIt(value []byte, key string) []byte {
 	return cipheredText
 }
 
+// decrypts the data
 func decryptIt(ciphered []byte, keyPhrase string) []byte {
 	hashedPhrase := mdHashing(keyPhrase)
 	aesBlock, err := aes.NewCipher([]byte(hashedPhrase))

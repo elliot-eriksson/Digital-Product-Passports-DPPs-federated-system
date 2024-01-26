@@ -60,6 +60,16 @@ func resolveIPNS(sh *shell.Shell) (string, error) {
 	return sh.Resolve(YourPublicKey)
 }
 
+func passportFromCID(cid string) string {
+	sh := shell.NewShell("localhost:5001")
+	text, err := readFile(sh, cid)
+	if err != nil {
+		fmt.Println("Error reading the file:", err.Error())
+		return ""
+	}
+	return string(decryptIt([]byte(*text), "hej"))
+}
+
 func ipfs(upploadString string) (string, error) {
 	sh := shell.NewShell("localhost:5001")
 

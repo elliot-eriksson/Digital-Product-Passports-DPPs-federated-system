@@ -11,7 +11,6 @@ type PassPort struct {
 	ItemID       int                `bson:"ItemID"`        //ItemID som ökar med ett för varje tillagt pass
 	ItemName     string             `bson:"ItemName"`      //Namn för produkten som man får själv lägga till vid skapningen
 	Origin       string             `bson:"Origin"`        //Samma för namn kanske ska ändras så det är länk etc för nu matas endast ett namn in
-	IsNew        bool               `bson:"IsNew"`         //IsNew ska uppdateras senare med IPFS
 	LinkMadeFrom []string           `bson:"LinkMadeFrom"`  //LinkMadeFrom ska vara länkar till exempelvis stål och trä som används i en spade
 	LinkMakes    []string           `bson:"LinkMakes"`     //LinkMakes blir LinkMadeFrom fast för andra hållet alltså att stålet går till spaden
 	LinkEvents   []string           `bson:"LinkEvents"`    //LinkEvents är eventen som kan hända exempelvis att en bil repareras etc

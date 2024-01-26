@@ -54,7 +54,6 @@ func Createpassport(ItemN string, OriginN string, client *mongo.Client, database
 		ItemID:       highestItemID + 1,
 		ItemName:     ItemN,
 		Origin:       OriginN,
-		IsNew:        true,
 		LinkMadeFrom: LinkMadeFromN, //Ska matas in länk från IPFS som ska stores
 		LinkMakes:    LinkMakesN,    //Samma här gäller det.
 		LinkEvents:   []string{},
@@ -79,6 +78,53 @@ func Createpassport(ItemN string, OriginN string, client *mongo.Client, database
 	fmt.Println(insertResult)
 	return highestItemID + 1
 
+}
+
+func sensetiveArray() (sensitiveArray []string) {
+	var input string
+	sensitiveArray = []string{"0", "0", "0", "0"}
+	fmt.Println("Enter sensetivite value 0 not sensetive : 1 sensetive")
+	fmt.Print("LinkMadeFrom: ")
+	fmt.Scan(&input)
+	for input != "0" && input != "1" {
+		fmt.Println("Input must be 0 or 1")
+		fmt.Print("LinkMadeFrom: ")
+		fmt.Scan(&input)
+	}
+	sensitiveArray = append(sensitiveArray, input)
+	fmt.Print("LinkMakes: ")
+	fmt.Scan(&input)
+	for input != "0" && input != "1" {
+		fmt.Println("Input must be 0 or 1")
+		fmt.Print("LinkMakes: ")
+		fmt.Scan(&input)
+	}
+	sensitiveArray = append(sensitiveArray, input)
+	// LinkEvents special
+	sensitiveArray = append(sensitiveArray, "2")
+	// Sensetive
+	sensitiveArray = append(sensitiveArray, "1")
+	// CreationDate
+	sensitiveArray = append(sensitiveArray, "0")
+	return sensitiveArray
+}
+
+func LinkMadeFrom() (LinkMadeFrom []string) {
+	var CID, inputMore, linkPassport string
+	fmt.Println("Press 1 to start entering CIDs for LinkMadeFrom: ")
+	fmt.Scan(&inputMore)
+	for inputMore == "1" {
+		fmt.Println("Enter CID (Enter 0 if no more): ")
+		fmt.Scan(&CID)
+		if CID != "0" {
+			linkPassport = passportFromCID(CID)
+
+			LinkMadeFrom = append(LinkMadeFrom, linkPassport)
+		} else {
+			inputMore = "0"
+		}
+	}
+	return LinkMadeFrom
 }
 
 // Funtion som tar in hårdkodad objectid för tillfället och gör det möjligt att lägga till event som hänt med produkten.
@@ -109,8 +155,9 @@ func passportMenu(client *mongo.Client, database, collection string) (itemID int
 		fmt.Scan(&ItemN)
 		fmt.Println("Enter item origin : ")
 		fmt.Scan(&OriginN)
-		sensitiveArray := []string{"0", "0", "0", "0", "0", "1", "1", "1", "1", "1"}
-		LinkMadeFrom := []string{"a", "b", "c", "d", "e", "f"}
+		// var LinkMadeFrom []string
+		LinkMadeFrom := LinkMadeFrom()
+		sensitiveArray := sensetiveArray()
 		LinkMakes := []string{}
 
 		//funktionsanrop för att skapa passport.

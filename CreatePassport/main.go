@@ -53,8 +53,8 @@ func main() {
 	var filter interface{}
 	filter = bson.D{{"ItemID", itemID}}
 	resultM, resultD, err := queryPassport(client, ctx, database, collection, filter)
-	fmt.Println("RESULT M               ", resultM)
-	fmt.Println("RESULT D               ", resultD)
+	// fmt.Println("RESULT M               ", resultM)
+	// fmt.Println("RESULT D               ", resultD)
 	if err != nil {
 		panic(err)
 	}

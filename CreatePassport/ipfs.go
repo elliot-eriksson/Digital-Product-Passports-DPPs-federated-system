@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -60,14 +61,17 @@ func resolveIPNS(sh *shell.Shell) (string, error) {
 	return sh.Resolve(YourPublicKey)
 }
 
-func passportFromCID(cid string) string {
+func passportFromCID(cid string) (target map[string]interface{}) {
 	sh := shell.NewShell("localhost:5001")
 	text, err := readFile(sh, cid)
 	if err != nil {
 		fmt.Println("Error reading the file:", err.Error())
-		return ""
+		// return ""
 	}
-	return string(decryptIt([]byte(*text), "hej"))
+	data := decryptIt([]byte(*text), "hej")
+	err = json.Unmarshal(data, &target)
+	target["cid"] = cid
+	return target
 }
 
 func ipfs(upploadString string) (string, error) {
@@ -80,37 +84,37 @@ func ipfs(upploadString string) (string, error) {
 	}
 
 	// 1. Add the "Hello from Launchpad!" text to IPFS
-	fmt.Println("Adding file to IPFS")
+	// fmt.Println("Adding file to IPFS")
 	cid, err := addFile(sh, upploadString)
 	if err != nil {
 		fmt.Println("Error adding file to IPFS:", err.Error())
 		return "", err
 	}
-	fmt.Println("File added with CID:", cid)
+	// fmt.Println("File added with CID:", cid)
 
 	// cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"
 	separator()
 
 	// 2. Read the file by using the generated CID
-	fmt.Println("Reading file")
+	// fmt.Println("Reading file")
 	text, err := readFile(sh, cid)
 	if err != nil {
 		fmt.Println("Error reading the file:", err.Error())
 		return "", err
 	}
 	fmt.Println("Content of the file:", *text)
-	fmt.Println("Content of the file decrypt:", string(decryptIt([]byte(*text), "hej")))
+	// fmt.Println("Content of the file decrypt:", string(decryptIt([]byte(*text), "hej")))
 
 	separator()
 	// cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"
 	// 3. Download the file to your computer
-	fmt.Println("Downloading file")
+	// fmt.Println("Downloading file")
 	err = downloadFile(sh, cid)
 	if err != nil {
 		fmt.Println("Error downloading file:", err.Error())
 		return "", err
 	}
-	fmt.Println("File downloaded")
+	// fmt.Println("File downloaded")
 
 	return cid, err
 	// separator()

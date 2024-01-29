@@ -52,6 +52,9 @@ func jsonFormat(data primitive.A) (newJsonData string) {
 	}
 	newJsonData = strings.Replace(string(jsonData), "\"Key\": ", "", -1)
 	newJsonData = strings.Replace(newJsonData, ",\n      \"Value\"", "", -1)
+	newJsonData = strings.Replace(newJsonData, ",\n         \"Value\"", "", -1)
+	newJsonData = strings.Replace(newJsonData, ",\n            \"Value\"", "", -1)
+	newJsonData = strings.Replace(newJsonData, ",\n               \"Value\"", "", -1)
 	newJsonData = strings.Replace(newJsonData, "[", "", 1)
 	newJsonData = strings.Replace(newJsonData, "\n   },\n   {", ",", -1)
 	sz := len(newJsonData)
@@ -94,10 +97,10 @@ func getSensitiveData(inputString string, resultD bson.D, sensetive int) (sensit
 
 	// Array with the values of either sensitive or nonsensitive
 	var sensitiveArray bson.A
-	fmt.Println("sensitiveArray 1 : ", sensitiveArray)
 	for _, value := range splitSensitiveAndNonSensitive {
 		sensitiveArray = append(sensitiveArray, resultD[value])
 	}
+	fmt.Println("sensitiveArray 1 : ", sensitiveArray)
 	return sensitiveArray
 }
 

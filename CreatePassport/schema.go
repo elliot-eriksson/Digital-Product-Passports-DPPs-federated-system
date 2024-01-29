@@ -40,7 +40,7 @@ func GetHighestItemID(client *mongo.Client, dbName, collectionName string) (int,
 }
 
 // TODO: Ändra så att funktionen tar query parametrar istället för hårdkodad data
-func Createpassport(ItemN string, OriginN string, client *mongo.Client, database, collection string, SensitiveArray []string, LinkMadeFromN []string, LinkMakesN []string) (itemID int) {
+func Createpassport(ItemN string, OriginN string, client *mongo.Client, database, collection string, SensitiveArray []string, LinkMadeFromN []map[string]interface{}, LinkMakesN []string) (itemID int) {
 	//funktionsanrop för att hämta det nuvarande högsta mongodb passport _id i databasen
 	highestItemID, err := GetHighestItemID(client, database, collection)
 	if err != nil {
@@ -48,10 +48,11 @@ func Createpassport(ItemN string, OriginN string, client *mongo.Client, database
 	}
 	log.Println("Highest ItemID:", highestItemID)
 	now := time.Now()
+	newItemID := highestItemID + 1
 
 	//Hämtar PassPort struct i models och ger den värden
 	Passport := PassPort{
-		ItemID:       highestItemID + 1,
+		ItemID:       newItemID,
 		ItemName:     ItemN,
 		Origin:       OriginN,
 		LinkMadeFrom: LinkMadeFromN, //Ska matas in länk från IPFS som ska stores
@@ -76,7 +77,7 @@ func Createpassport(ItemN string, OriginN string, client *mongo.Client, database
 	// 	}
 	// }()
 	fmt.Println(insertResult)
-	return highestItemID + 1
+	return newItemID
 
 }
 
@@ -109,8 +110,10 @@ func sensetiveArray() (sensitiveArray []string) {
 	return sensitiveArray
 }
 
-func LinkMadeFrom() (LinkMadeFrom []string) {
-	var CID, inputMore, linkPassport string
+func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
+	var CID, inputMore string
+	var linkPassport map[string]interface{}
+	// var data []map[string]interface{}
 	fmt.Println("Press 1 to start entering CIDs for LinkMadeFrom: ")
 	fmt.Scan(&inputMore)
 	for inputMore == "1" {
@@ -118,7 +121,6 @@ func LinkMadeFrom() (LinkMadeFrom []string) {
 		fmt.Scan(&CID)
 		if CID != "0" {
 			linkPassport = passportFromCID(CID)
-
 			LinkMadeFrom = append(LinkMadeFrom, linkPassport)
 		} else {
 			inputMore = "0"
@@ -158,6 +160,7 @@ func passportMenu(client *mongo.Client, database, collection string) (itemID int
 		// var LinkMadeFrom []string
 		LinkMadeFrom := LinkMadeFrom()
 		sensitiveArray := sensetiveArray()
+
 		LinkMakes := []string{}
 
 		//funktionsanrop för att skapa passport.

@@ -10,22 +10,20 @@ import (
 )
 
 // Message is a struct representing the response format
-type userClaim struct {
-	jwt.RegisteredClaims
-	Username string
-	Password string
-}
 
 func main() {
 	// Define a route handler for the "/home" endpoint
-	http.HandleFunc("/home", handlePage)
+	// http.HandleFunc("/home", handlePage)
 
-	//Start the server on port 8080
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
-		log.Println("There was an error listening on port :8080", err)
-	}
-
+	// //Start the server on port 8080
+	// err := http.ListenAndServe(":8080", nil)
+	// if err != nil {
+	// 	log.Println("There was an error listening on port :8080", err)
+	// }
+	cid := "QmbjnEtna7T7hLN3CmaVYPNwwkQGxUoEZsGZJfNVVusmJB"
+	key := "hej"
+	getPassport(cid, key)
+	getSensetive(cid, key, key)
 }
 
 // handlePage is the handler function for the "/home" endpoint
@@ -53,18 +51,19 @@ func handlePage(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	fmt.Println(userClaim.Username)
-	fmt.Println(userClaim.Password)
+	fmt.Println(userClaim.Hash)
 	//Finns user ?
 	// if authenticateRole(userClaim.hasedVlaue){
-	jwtToken, err := createJWT(userClaim.Username, userClaim.Password)
-	// 	if err != nil {
-	// 		// If there is an error encoding, you can handle it as needed
-	// 		log.Println("Error creating JWT token:", err)
-	// 		return
-	// 	}
+	rights := checkAccessRights(userClaim.Hash)
+	fmt.Println("RIGHTS----------------", rights)
+	jwtToken, err := createJWT(userClaim.Username, rights, userClaim.Hash)
+	if err != nil {
+		// If there is an error encoding, you can handle it as needed
+		log.Println("Error creating JWT token:", err)
+		return
+	}
 	// 	fmt.Printf("JWT Token: %s\n", jwtToken)
 	// } else {
-	// 	log.Println("This user does not exist")
 	// 	return
 	// }
 	if isValidJWT(jwtToken, key) {
@@ -79,16 +78,35 @@ func handlePage(writer http.ResponseWriter, request *http.Request) {
 
 const key = "your-256-bit-secret"
 
-func createJWT(username string, password string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, userClaim{
-		RegisteredClaims: jwt.RegisteredClaims{},
-		Username:         username,
-		Password:         password,
+type userClaim struct {
+	jwt.RegisteredClaims
+	Username         string
+	Hash             string
+	isAdmin          bool
+	isRemanufactorer bool
+	isUser           bool
+}
+
+type AccessRights struct {
+	isAdmin          bool
+	isRemanufactorer bool
+	isUser           bool
+}
+
+func createJWT(username string, rights AccessRights, hash string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		// "RegisteredClaims": jwt.RegisteredClaims{},
+		"Username":         username,
+		"Hash":             hash,
+		"isAdmin":          rights.isAdmin,
+		"isRemanufactorer": rights.isRemanufactorer,
+		"isUser":           rights.isUser,
 	})
 
+	fmt.Println("TOKEN.................", token)
 	//creation of JWT
 	signedString, err := token.SignedString([]byte(key))
-	//fmt.Println("signedString", signedString)
+	fmt.Println("signedString", signedString)
 
 	if err != nil {
 		return "", fmt.Errorf("error creating signedString: %v", err)
@@ -96,7 +114,7 @@ func createJWT(username string, password string) (string, error) {
 	return signedString, nil
 }
 
-func checkAccessRights(userHash string) string {
+func checkAccessRights(userHash string) AccessRights {
 	//Connection till mongoDb för att kolla om user existerar
 	userHashAdmin := "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
 	userHashUser := "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
@@ -105,21 +123,58 @@ func checkAccessRights(userHash string) string {
 	//header + userHashAdmin
 	//payload
 	//secret
+	// adminRights := userClaim{isAdmin: true, isRemanufactorer: false, isUser: false}
+	// manufacturerRights := userClaim{isAdmin: false, isRemanufactorer: true, isUser: false}
+	// userRights := userClaim{isAdmin: false, isRemanufactorer: false, isUser: true}
+	// noRights := userClaim{isAdmin: false, isRemanufactorer: false, isUser: false}
+
+	adminRights := AccessRights{isAdmin: true, isRemanufactorer: false, isUser: false}
+	manufacturerRights := AccessRights{isAdmin: false, isRemanufactorer: true, isUser: false}
+	userRights := AccessRights{isAdmin: false, isRemanufactorer: false, isUser: true}
+	noRights := AccessRights{isAdmin: false, isRemanufactorer: false, isUser: false}
+
 	if userHash == userHashAdmin {
-		return "admin"
+		//Non sensitive & sensitive
+		fmt.Println("Admin ", adminRights.isAdmin, "\n", "manu ", adminRights.isRemanufactorer, "\n", "user ", adminRights.isUser)
+		return adminRights
+	} else if userHash == userHashUser {
+		//Möjlighet att inserta till databas
+		//Skapa addresser till databas som uppladdas till IPFS
+		//Non sensitive + lägga till remanufactor event
+		fmt.Println(manufacturerRights.isRemanufactorer)
+		return manufacturerRights
+	} else if userHash == userHashGuest {
+		//Non sensitive
+		fmt.Println(userRights.isUser)
+		return userRights
+	} else {
+		fmt.Println("norights")
+		return noRights
 	}
-	if userHash == userHashUser {
-		return "user"
-	}
-	if userHash == userHashGuest {
-		return "guest"
-	}
-	return "no access"
+
 	//Clinet
 	//ENcrypt hasahd verision av key
 	//--> decrypta
 	//key
 }
+
+// func recieveUserInformation(userHash, username string){
+
+// 	if rights.isAdmin{
+// 		//generateJWT(rights)
+// 		//CID --> visa allt
+// 		//createJWT(username, rights)
+
+// 	}else if rights.isRemanufactorer{
+// 		//createJWT(username, rights)
+
+// 	}else if rights.isUser{
+// 		//>createJWT(username, rights)
+
+// 	}else{
+// 		fmt.Println("The given hash has either expired or malfunctioned")
+// 	}
+// }
 
 func isValidJWT(signedString string, key string) bool {
 	token, err := jwt.Parse(signedString,

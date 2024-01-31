@@ -9,12 +9,6 @@ import (
 )
 
 func main() {
-
-	// 107 = k
-	// 81 = Q
-	//tst := "string"
-	//fmt.Println(reflect.TypeOf(tst))
-
 	//SELF := "k51qzi5uqu5dgpie7j0flapmw67becwedlv5vjsvrsp634va9pl4pl3oe0yvyn"
 	//LKAB := "k51qzi5uqu5dk0lknwezqu0hrcbgpbbrpynp3r5nh9typbj861k79bu8bud64t"
 	//SSAB := "k51qzi5uqu5dlhsqq2mlmroidrca8vuautxhmbcmb5bvmb4g1lvljpj4fanf3x"
@@ -24,54 +18,70 @@ func main() {
 
 	// Initialize IPFS shell
 	sh := shell.NewShell("127.0.0.1:5001")
+
+	// Use this to test the creation of an IPNS record. The second argument is the public key, the third key is the IPFS record we want to point at.
 	//addDataToIPNS(sh, VOLVO, cid)
+
+	// Use this to test the creation of public keys. The second argument (a string) is the alias for the created key.
 	//fmt.Println(keyGenerator(sh, "samuelsnyckel"))
 
-	thisvar, err := lsIPNS(sh, "k51qzi5uqu5dgpie7j0flapmw67becwedlv5vjsvrsp634va9pl4pl3oe0yvyn")
+	//
+
+	// Use this to test the retrieval of an IPNS record. The second argument is a CID or a public key (string)
+	thisvar, err := lsIPNS(sh, "k51qzi5uqu5dk0lknwezqu0hrcbgpbbrpynp3r5nh9typbj861k79bu8bud64t")
 	if err != nil {
 		fmt.Println("big error oh no")
 	}
-	content, contentlength := splitListContent(thisvar)
-	fmt.Println(content, contentlength)
-	// for x = 0, x < len(list)
-	// 	fmt.Println("CID", x, content[x])
+	content, contentLength := splitListContent(thisvar)
+	catContent(content, contentLength)
 
 }
 
+// Just for printing after the CID information
 func separator() {
-	fmt.Println("-------------------")
+	fmt.Println("----------------------------------------------------------------------")
 }
 
+// Splitting the different files into their own string.
 func splitListContent(Content string) ([]string, int) {
 	temp := strings.Split(Content, "\n")
 	lenvar := len(temp) - 1
-	fmt.Println("your splitted CIDs are: ", temp)
-	fmt.Println("you have ", lenvar, " different CIDs in this directory")
+	//fmt.Println("your splitted CIDs are: ", temp)
+	//fmt.Println("you have ", lenvar, " different CIDs in this directory")
 	return temp, lenvar
 }
 
-func catContent(CID []string, length int) (string, error) {
-
-	cmd := exec.Command("ipfs", "cat")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Println(string(output))
-		return "", err
+// Printing and retriving the information from an IPNS pointer
+func catContent(CID []string, length int) {
+	var splitIndex []string
+	// Trims unnecessary spaces and content from the CID-array
+	for i := 0; i < length; i++ {
+		splitIndex = append(splitIndex, strings.Split(string(CID[i]), " ")...)
 	}
-	return string(output), err
-
+	// Splits the array to be able to print out the CID content
+	for i := 0; i < len(splitIndex); i += 3 {
+		fmt.Println("File", splitIndex[i+2], " has CID :", splitIndex[i])
+		cmd := exec.Command("ipfs", "cat", splitIndex[i])
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			fmt.Println(string(output))
+			return
+		}
+		fmt.Println("The content of the file", splitIndex[i+2], "is:", string(output))
+	}
 }
 
-// om den returnar "" vet vi att det inte är ett directory, utan bara en fil av något slag
+// Helper function to find out if its and directory or just an file.
+// Also retrieves the pointer data
 func lsIPNS(sh *shell.Shell, key string) (string, error) {
 	//simple check for if the sent link is an directory or a CID.
 	if key[0] == 107 { // checks if the first char is k
-		fmt.Println("This is a public key ", key)
+		//fmt.Println("This is a public key ", key)
 		separator()
 		key = "/ipns/" + key
 	}
 	if key[0] == 81 { // checks if the first char is Q
-		fmt.Println("This is a CID ", key)
+		//fmt.Println("This is a CID ", key)
 		separator()
 		key = "/ipfs/" + key
 	}
@@ -96,11 +106,11 @@ func lsIPNS(sh *shell.Shell, key string) (string, error) {
 
 }
 
+// Generates public key
 func keyGenerator(sh *shell.Shell, keyAlias string) (string, error) {
 	cmd := exec.Command("ipfs", "key", "gen", keyAlias)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		//return "", fmt.Errorf("failed to generate a public key %v, output: %s", err, output)
 		fmt.Println(string(output))
 		return "", err
 	}
@@ -108,6 +118,7 @@ func keyGenerator(sh *shell.Shell, keyAlias string) (string, error) {
 	return string(output), nil
 }
 
+// Find out to what public key the CID is pointing to.
 func resolveKeyPointer(sh *shell.Shell, key string) (string, error) {
 	cmd := exec.Command("ipfs", "resolve", ipnsKeyToCMD(key))
 	output, err := cmd.CombinedOutput()
@@ -119,6 +130,7 @@ func resolveKeyPointer(sh *shell.Shell, key string) (string, error) {
 	return string(output), nil
 }
 
+// Helper function to get the IPNS key to a format for the terminal
 func ipnsKeyToCMD(key string) string {
 	key = "/ipns/" + key
 	return key

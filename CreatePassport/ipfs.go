@@ -90,7 +90,7 @@ func ipfs(upploadString string) (string, error) {
 		fmt.Println("Error adding file to IPFS:", err.Error())
 		return "", err
 	}
-	// fmt.Println("File added with CID:", cid)
+	fmt.Println("File added with CID:", cid)
 
 	// cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"
 	separator()
@@ -103,7 +103,7 @@ func ipfs(upploadString string) (string, error) {
 		return "", err
 	}
 	fmt.Println("Content of the file:", *text)
-	// fmt.Println("Content of the file decrypt:", string(decryptIt([]byte(*text), "hej")))
+	fmt.Println("Content of the file decrypt:", string(decryptIt([]byte(*text), "hej")))
 
 	separator()
 	// cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"

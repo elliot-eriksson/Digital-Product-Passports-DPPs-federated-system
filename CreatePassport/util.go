@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	shell "github.com/ipfs/go-ipfs-api"
+	qrcode "github.com/skip2/go-qrcode"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -100,22 +101,22 @@ func getSensitiveData(inputString string, resultD bson.D, sensetive int) (sensit
 	for _, value := range splitSensitiveAndNonSensitive {
 		sensitiveArray = append(sensitiveArray, resultD[value])
 	}
-	fmt.Println("sensitiveArray 1 : ", sensitiveArray)
+	// fmt.Println("sensitiveArray 1 : ", sensitiveArray)
 	return sensitiveArray
 }
 
 // Uploads the passport to IPFS and calls updateDatabase(), where the filter is the CID
-func uploadAndUpdateCID(intSensitive int, resultM primitive.M, resultD primitive.D, client *mongo.Client, database, collection string) {
+func uploadAndUpdateCID(intSensitive int, resultM primitive.M, resultD primitive.D, client *mongo.Client, database, collection string) (cid string) {
 	sensitiveArray := getSensitiveData(fmt.Sprintf("%v", resultM["Sensitive"]), resultD, intSensitive)
 	jsonData := jsonFormat(sensitiveArray)
-	fmt.Printf("json %s\n", jsonData)
-
+	// fmt.Printf("json %s\n", jsonData)
+	var err error
 	var filter primitive.D
 	var update interface{}
 	if json.Valid([]byte(jsonData)) {
 
 		var upploadString string = string(encryptIt([]byte(jsonData), "hej"))
-		cid, err := ipfs(upploadString)
+		cid, err = ipfs(upploadString)
 		if err != nil {
 			panic(err)
 		}
@@ -132,4 +133,18 @@ func uploadAndUpdateCID(intSensitive int, resultM primitive.M, resultD primitive
 	} else {
 		fmt.Println("Not json valid")
 	}
+	return cid
+}
+
+func generateQRCode(cid string) {
+	target := passportFromCID(cid)
+
+	newjson := "{" + "\n      \"cid\": " + "\"" + cid + "\",\n" +
+		"      \"ItemName\": " + "\"" + fmt.Sprintf("%v", target["ItemName"]) + "\",\n" +
+		"      \"Origin\": " + "\"" + fmt.Sprintf("%v", target["Origin"]) + "\",\n" +
+		"      \"CreationDate\": " + "\"" + fmt.Sprintf("%v", target["CreationDate"]) + "\"\n" +
+		"}"
+
+	// decryptText = strings.Replace(decryptText, "{", "{\n      \"cid\": "+"\""+cid+"\"", 1)
+	qrcode.WriteFile(newjson, qrcode.Medium, 256, cid+".png")
 }

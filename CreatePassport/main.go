@@ -15,6 +15,7 @@ func main() {
 	var i int
 	var database string
 	var collection string
+	var cid string
 
 	//temporär
 	fmt.Println("What database and table do you want? 1: LKAB, 2: SSAB, 3: VOLVO")
@@ -59,8 +60,10 @@ func main() {
 		panic(err)
 	}
 	// 1 for Sensitive Passport
-	uploadAndUpdateCID(1, resultM, resultD, client, database, collection)
+	cid = uploadAndUpdateCID(1, resultM, resultD, client, database, collection)
 	// 0 for Non Sensitive Passport
-	uploadAndUpdateCID(0, resultM, resultD, client, database, collection)
+	cid = uploadAndUpdateCID(0, resultM, resultD, client, database, collection)
+
+	generateQRCode(cid)
 
 }

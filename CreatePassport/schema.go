@@ -107,6 +107,8 @@ func sensetiveArray() (sensitiveArray []string) {
 	sensitiveArray = append(sensitiveArray, "1")
 	// CreationDate
 	sensitiveArray = append(sensitiveArray, "0")
+	// CID_sen
+	sensitiveArray = append(sensitiveArray, "0")
 	return sensitiveArray
 }
 

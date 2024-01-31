@@ -11,11 +11,14 @@ import (
 )
 
 // Paste here the local path of your computer where the file will be downloaded
-const YourLocalPath = "C:/Users/boink/Desktop/test"
+const YourLocalPath = "/Users/smul/savedfromipfs"
 
 // Paste here your public key
 // Go to powershell run the following command: ipfs key list -l
-const YourPublicKey = "k51qzi5uqu5djc71p3quno2nypbts7k7t14el81gwjpxsjksp25kbbl22n70rh"
+const YourPublicKey = "k51qzi5uqu5dgpie7j0flapmw67becwedlv5vjsvrsp634va9pl4pl3oe0yvyn"
+
+// samuels lo-path: "/Users/smul/savedfromipfs"
+// samuels pub-key: "k51qzi5uqu5dgpie7j0flapmw67becwedlv5vjsvrsp634va9pl4pl3oe0yvyn"
 
 // // Paste here the local path of your computer where the file will be downloaded
 // const YourLocalPath = "C:/Users/Ellio/Desktop/test"
@@ -102,6 +105,14 @@ func ipfs(upploadString string) (string, error) {
 	}
 	fmt.Println("File downloaded")
 
+	addToIPNS(sh, cid)
+
+	resultingIPNSAddress, err := resolveIPNS(sh)
+	if err != nil {
+		fmt.Println("Error resolving IPNS: ", err.Error())
+	}
+
+	fmt.Println(cid, " is now pointing to: ", resultingIPNSAddress)
 	return cid, err
 	// separator()
 

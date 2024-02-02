@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"io"
@@ -41,6 +43,7 @@ func readFile(sh *shell.Shell, cid string) (*string, error) {
 	}
 
 	text := string(bytes)
+	pinToIPFS(cid)
 
 	return &text, nil
 }
@@ -61,9 +64,29 @@ func resolveIPNS(sh *shell.Shell) (string, error) {
 	return sh.Resolve(YourPublicKey)
 }
 
+func pinToIPFS(cid string) {
+	// URL of your IPFS node's API
+	ipfsAPIURL := "http://localhost:5001/api/v0/pin/add?arg=" + cid
+
+	// Make a POST request to pin the CID
+	resp, err := http.Post(ipfsAPIURL, "application/json", bytes.NewBuffer([]byte{}))
+	if err != nil {
+		fmt.Println("Error pinning CID:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		fmt.Println("CID pinned successfully")
+	} else {
+		fmt.Println("Failed to pin CID:", resp.Status)
+	}
+}
+
 func passportFromCID(cid string) (target map[string]interface{}) {
 	sh := shell.NewShell("localhost:5001")
 	text, err := readFile(sh, cid)
+
 	if err != nil {
 		fmt.Println("Error reading the file:", err.Error())
 		// return ""

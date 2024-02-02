@@ -12,18 +12,29 @@ import (
 // Message is a struct representing the response format
 
 func main() {
+
+	getURL := "/get-endpoint"
+	createPassportURL := "/put-createPassport"
+	addRemanafactureEventURL := "/put-addRemanafactureEvent"
+
+	http.HandleFunc(getURL, getHandler)
+	http.HandleFunc(createPassportURL, createPassportHandler)
+	http.HandleFunc(addRemanafactureEventURL, addRemanafactureEventHandler)
+
 	// Define a route handler for the "/home" endpoint
 	// http.HandleFunc("/home", handlePage)
 
-	// //Start the server on port 8080
-	// err := http.ListenAndServe(":8080", nil)
-	// if err != nil {
-	// 	log.Println("There was an error listening on port :8080", err)
-	// }
-	cid := "QmbjnEtna7T7hLN3CmaVYPNwwkQGxUoEZsGZJfNVVusmJB"
-	key := "hej"
-	getPassport(cid, key)
-	getSensetive(cid, key, key)
+	// Start the server on port 8080
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Println("There was an error listening on port :8080", err)
+	}
+
+	// ------------ SUNES GREJER --------------
+	// cid := "QmbjnEtna7T7hLN3CmaVYPNwwkQGxUoEZsGZJfNVVusmJB"
+	// key := "hej"
+	// getPassport(cid, key)
+	// getSensetive(cid, key, key)
 }
 
 // handlePage is the handler function for the "/home" endpoint
@@ -72,6 +83,15 @@ func handlePage(writer http.ResponseWriter, request *http.Request) {
 	} else {
 		fmt.Println("JWT is not valid.")
 	}
+	//------------Extracting payload without verifying signature
+	payload, err := extractPayload(jwtToken)
+	payloadJSON, err := extractPayloadJSON(jwtToken)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	fmt.Println("-----Payload", payload)
+	fmt.Println("-----PayloadJSON", payloadJSON)
 }
 
 // TODO: Generera, auth, validate
@@ -157,24 +177,41 @@ func checkAccessRights(userHash string) AccessRights {
 	//--> decrypta
 	//key
 }
+func extractPayload(jwtToken string) (map[string]interface{}, error) {
+	token, _, err := new(jwt.Parser).ParseUnverified(jwtToken, jwt.MapClaims{})
 
-// func recieveUserInformation(userHash, username string){
+	if err != nil {
+		return nil, err
+	}
 
-// 	if rights.isAdmin{
-// 		//generateJWT(rights)
-// 		//CID --> visa allt
-// 		//createJWT(username, rights)
+	// Extract the payload
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		return claims, nil
+	}
 
-// 	}else if rights.isRemanufactorer{
-// 		//createJWT(username, rights)
+	return nil, fmt.Errorf("failed to extract payload")
+}
 
-// 	}else if rights.isUser{
-// 		//>createJWT(username, rights)
+func extractPayloadJSON(jwtToken string) (string, error) {
+	//Without checking the
+	token, _, err := new(jwt.Parser).ParseUnverified(jwtToken, jwt.MapClaims{})
+	if err != nil {
+		return "", err
+	}
 
-// 	}else{
-// 		fmt.Println("The given hash has either expired or malfunctioned")
-// 	}
-// }
+	// Extract the payload
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		// Convert the payload to JSON
+		payloadJSON, err := json.Marshal(claims)
+		if err != nil {
+			return "", err
+		}
+
+		return string(payloadJSON), nil
+	}
+
+	return "", fmt.Errorf("failed to extract payload")
+}
 
 func isValidJWT(signedString string, key string) bool {
 	token, err := jwt.Parse(signedString,

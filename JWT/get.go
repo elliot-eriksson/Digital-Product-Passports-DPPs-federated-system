@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	shell "github.com/ipfs/go-ipfs-api"
 )
@@ -37,14 +38,15 @@ func passportFromCID(cid, key string) (target map[string]interface{}) {
 	return target
 }
 
-func getPassport(cid, key string) {
+func getPassport(cid, key string) string {
 	result := passportFromCID(cid, key)
 	jsonStr, err := json.Marshal(result)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return
+		return ""
 	}
 	fmt.Println("JSON STRING \n", string(jsonStr))
+	return string(jsonStr)
 }
 
 func getSensetive(cid, key, keySen string) {
@@ -56,6 +58,10 @@ func getSensetive(cid, key, keySen string) {
 		return
 	}
 	fmt.Println("JSON STRING sensetive \n", string(jsonStr))
+}
+
+func addFile(sh *shell.Shell, text string) (string, error) {
+	return sh.Add(strings.NewReader(text))
 }
 
 func getEvent(cid string) {

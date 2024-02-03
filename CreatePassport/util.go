@@ -144,7 +144,5 @@ func generateQRCode(cid string) {
 		"      \"Origin\": " + "\"" + fmt.Sprintf("%v", target["Origin"]) + "\",\n" +
 		"      \"CreationDate\": " + "\"" + fmt.Sprintf("%v", target["CreationDate"]) + "\"\n" +
 		"}"
-
-	// decryptText = strings.Replace(decryptText, "{", "{\n      \"cid\": "+"\""+cid+"\"", 1)
 	qrcode.WriteFile(newjson, qrcode.Medium, 256, cid+".png")
 }

@@ -12,8 +12,6 @@ import (
 	"encoding/hex"
 )
 
-var keyPhrase string = "Potatis1"
-
 func mdHashing(input string) string {
 	byteInput := []byte(input)
 	md5Hash := md5.Sum(byteInput)
@@ -32,6 +30,7 @@ func encryptIt(value []byte, key string) []byte {
 		fmt.Println(err)
 	}
 
+	// Might want to not use random nonce to make sure that same information give the same CID after encryption
 	nonce := make([]byte, gcmInstance.NonceSize())
 	_, _ = io.ReadFull(rand.Reader, nonce)
 

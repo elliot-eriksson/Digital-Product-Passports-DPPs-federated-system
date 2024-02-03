@@ -17,7 +17,7 @@ func main() {
 	var collection string
 	var cid string
 
-	//temporär
+	// Lets you chose witch of the three test database create to uppdate.
 	fmt.Println("What database and table do you want? 1: LKAB, 2: SSAB, 3: VOLVO")
 	fmt.Scan(&i)
 	switch i {
@@ -46,25 +46,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//Coll := client.Database(database).collection(collection)
-
-	//funktionsanrop för passport meny. Presenterar en med 2 stycken val just nu. Antingen skapa ett nytt passport eller uppdatera ett passport med remanafacture event
+	//funktionsanrop för passport meny. Presenterar en med 2 stycken val just nu. Antingen skapa ett nytt passport eller återskapa en qr-kod
 	itemID := passportMenu(client, database, collection)
+	if itemID != 0 {
+		var filter interface{}
+		filter = bson.D{{"ItemID", itemID}}
+		resultM, resultD, err := queryPassport(client, ctx, database, collection, filter)
+		if err != nil {
+			panic(err)
+		}
+		// 1 for Sensitive Passport
+		cid = uploadAndUpdateCID(1, resultM, resultD, client, database, collection)
+		// 0 for Non Sensitive Passport
+		resultM2, resultD2, err := queryPassport(client, ctx, database, collection, filter)
+		cid = uploadAndUpdateCID(0, resultM2, resultD2, client, database, collection)
 
-	var filter interface{}
-	filter = bson.D{{"ItemID", itemID}}
-	resultM, resultD, err := queryPassport(client, ctx, database, collection, filter)
-	// fmt.Println("RESULT M               ", resultM)
-	// fmt.Println("RESULT D               ", resultD)
-	if err != nil {
-		panic(err)
+		generateQRCode(cid)
 	}
-	// 1 for Sensitive Passport
-	cid = uploadAndUpdateCID(1, resultM, resultD, client, database, collection)
-	// 0 for Non Sensitive Passport
-	resultM2, resultD2, err := queryPassport(client, ctx, database, collection, filter)
-	cid = uploadAndUpdateCID(0, resultM2, resultD2, client, database, collection)
-
-	generateQRCode(cid)
-
 }

@@ -1,15 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -81,6 +78,8 @@ func Createpassport(ItemN string, OriginN string, client *mongo.Client, database
 
 }
 
+// Creates a way to split data from database to implement diffrent access levels with different encryption
+// TODO Need to change this to be fully dynamic with new rows of information
 func sensetiveArray() (sensitiveArray []string) {
 	var input string
 	sensitiveArray = []string{"0", "0", "0", "0"}
@@ -112,6 +111,8 @@ func sensetiveArray() (sensitiveArray []string) {
 	return sensitiveArray
 }
 
+// Retrieves the passport infromation from the CID/products the passport is created from
+// TODO Needs to retrieve the key the given CID is encrypted with
 func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
 	var CID, inputMore string
 	var linkPassport map[string]interface{}
@@ -131,24 +132,10 @@ func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
 	return LinkMadeFrom
 }
 
-// Funtion som tar in hårdkodad objectid för tillfället och gör det möjligt att lägga till event som hänt med produkten.
-// Behöver lägga till där man hämtar objectid för att välja vilken produkt som det ska uppdateras för
-func RemanufactureEvent(client *mongo.Client, database, collection, mongoid string, RemanEvent string) {
-	Coll := client.Database(database).Collection(collection)
-	id, _ := primitive.ObjectIDFromHex(mongoid)
-	filter := bson.D{{Key: "_id", Value: id}}
-	update := bson.D{{Key: "$push", Value: bson.D{{Key: "LinkEvents", Value: RemanEvent}}}}
-	result, err := Coll.UpdateOne(context.TODO(), filter, update)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Documents matched: %v\n", result.MatchedCount)
-	fmt.Printf("Documents updated: %v\n", result.ModifiedCount)
-}
 func passportMenu(client *mongo.Client, database, collection string) (itemID int) {
 	//temporär input för test ändamål, ska ändras framöver för att kunna göras via hemsida/program etc
 	var i int
-	fmt.Println("What do you want to do? 1: Createpassport, 2: Remanufacture events for passports")
+	fmt.Println("What do you want to do? 1: Createpassport, 2: Regenerate QR code")
 	fmt.Scan(&i)
 	switch i {
 	case 1:
@@ -169,27 +156,15 @@ func passportMenu(client *mongo.Client, database, collection string) (itemID int
 		//TODO: ska kunna hantera querys senare
 		return Createpassport(ItemN, OriginN, client, database, collection, sensitiveArray, LinkMadeFrom, LinkMakes)
 	case 2:
-
-		//testinput för att lägga till ett remanufacture event till en produkt
-		fmt.Println("Enter what has been updated on this certain product:")
-		fmt.Scan("")
-		reader := bufio.NewReader(os.Stdin)
-		RemanEvent, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println("Error reading input:", err)
-			return
-		}
-		RemanEvent = RemanEvent[:len(RemanEvent)-1]
-
-		//funktionsanrop för att uppdatera en produkt med ett remanufacture event
-		//TODO: andra variabeln som skickas med i funktionen måste bytas ut med en dynamisk variabel "objectid" senare, är hårdkodad för nuvarandet med ett _id
-		//TODO: ska kunna hantera querys
-		var remanafactureProductID string = "65b1282112afb84376254117"
-		RemanufactureEvent(client, database, collection, remanafactureProductID, RemanEvent)
+		var cid string
+		fmt.Println("Enter CID to regenerate QR-Code:")
+		fmt.Scan(&cid)
+		generateQRCode(cid)
+		return 0
 
 	default:
-		fmt.Println("xdd")
+		fmt.Println("Error")
 
 	}
-	return
+	return 0
 }

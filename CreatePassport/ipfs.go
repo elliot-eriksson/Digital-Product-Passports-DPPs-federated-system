@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"io"
 	"strings"
@@ -16,16 +15,8 @@ import (
 // Paste here the local path of your computer where the file will be downloaded
 const YourLocalPath = "C:/Users/boink/Desktop/test"
 
-// Paste here your public key
-// Go to powershell run the following command: ipfs key list -l
-const YourPublicKey = "k51qzi5uqu5djc71p3quno2nypbts7k7t14el81gwjpxsjksp25kbbl22n70rh"
-
 // // Paste here the local path of your computer where the file will be downloaded
 // const YourLocalPath = "C:/Users/Ellio/Desktop/test"
-
-// // Paste here your public key
-// // Go to powershell run the following command: ipfs key list -l
-// const YourPublicKey = "k51qzi5uqu5dk93h4gqv2fml1x95vc92hbh6tr5atdo5fgc2623qvfak4o6qe3"
 
 func addFile(sh *shell.Shell, text string) (string, error) {
 	return sh.Add(strings.NewReader(text))
@@ -52,18 +43,6 @@ func downloadFile(sh *shell.Shell, cid string) error {
 	return sh.Get(cid, YourLocalPath)
 }
 
-func addToIPNS(sh *shell.Shell, cid string) error {
-	var lifetime time.Duration = 50 * time.Hour
-	var ttl time.Duration = 1 * time.Microsecond
-
-	_, err := sh.PublishWithDetails(cid, YourPublicKey, lifetime, ttl, true)
-	return err
-}
-
-func resolveIPNS(sh *shell.Shell) (string, error) {
-	return sh.Resolve(YourPublicKey)
-}
-
 func pinToIPFS(cid string) {
 	// URL of your IPFS node's API
 	ipfsAPIURL := "http://localhost:5001/api/v0/pin/add?arg=" + cid
@@ -81,6 +60,11 @@ func pinToIPFS(cid string) {
 	} else {
 		fmt.Println("Failed to pin CID:", resp.Status)
 	}
+
+	//this might work need testing
+	// sh := shell.NewShell("localhost:5001")
+	// sh.Pin(cid)
+
 }
 
 func passportFromCID(cid string) (target map[string]interface{}) {
@@ -128,38 +112,17 @@ func ipfs(upploadString string) (string, error) {
 	fmt.Println("Content of the file:", *text)
 	fmt.Println("Content of the file decrypt:", string(decryptIt([]byte(*text), "hej")))
 
-	separator()
-	// cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"
-	// 3. Download the file to your computer
-	// fmt.Println("Downloading file")
-	err = downloadFile(sh, cid)
-	if err != nil {
-		fmt.Println("Error downloading file:", err.Error())
-		return "", err
-	}
+	// separator()
+	// // cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"
+	// // 3. Download the file to your computer
+	// // fmt.Println("Downloading file")
+	// err = downloadFile(sh, cid)
+	// if err != nil {
+	// 	fmt.Println("Error downloading file:", err.Error())
+	// 	return "", err
+	// }
 	// fmt.Println("File downloaded")
 
 	return cid, err
 	// separator()
-
-	// // 4. Publish the file to IPNS
-	// fmt.Println("Adding file to IPNS")
-	// err = addToIPNS(sh, cid)
-	// if err != nil {
-	// 	fmt.Println("Error publishing to IPNS:", err.Error())
-	// 	return
-	// }
-	// fmt.Println("File added to IPNS")
-
-	// separator()
-
-	// // 5. Resolve IPNS based on your public key
-	// fmt.Println("Resolving file in IPNS")
-	// result, err := resolveIPNS(sh)
-	// if err != nil {
-	// 	fmt.Println("Error resolving IPNS:", err.Error())
-	// 	return
-	// }
-
-	// fmt.Println("IPNS is pointing to:", result)
 }

@@ -113,6 +113,7 @@ func uploadAndUpdateCID(intSensitive int, resultM primitive.M, resultD primitive
 
 		var upploadString string = string(encryptIt([]byte(jsonData), "hej"))
 		cid, err = ipfs(upploadString)
+
 		if err != nil {
 			panic(err)
 		}

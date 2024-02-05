@@ -55,12 +55,13 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+
 		// 1 for Sensitive Passport
 		cid = uploadAndUpdateCID(1, resultM, resultD, client, database, collection)
 		// 0 for Non Sensitive Passport
 		resultM2, resultD2, err := queryPassport(client, ctx, database, collection, filter)
 		cid = uploadAndUpdateCID(0, resultM2, resultD2, client, database, collection)
-
+		keyRename(cid)
 		generateQRCode(cid)
 	}
 }

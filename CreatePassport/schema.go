@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	shell "github.com/ipfs/go-ipfs-api"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -37,7 +38,7 @@ func GetHighestItemID(client *mongo.Client, dbName, collectionName string) (int,
 }
 
 // TODO: Ändra så att funktionen tar query parametrar istället för hårdkodad data
-func Createpassport(ItemN string, OriginN string, client *mongo.Client, database, collection string, SensitiveArray []string, LinkMadeFromN []map[string]interface{}, LinkMakesN []string) (itemID int) {
+func Createpassport(ItemN string, OriginN string, client *mongo.Client, database, collection string, SensitiveArray []string, LinkMadeFromN []map[string]interface{}, LinkMakesN []string, ipnskey string) (itemID int) {
 	//funktionsanrop för att hämta det nuvarande högsta mongodb passport _id i databasen
 	highestItemID, err := GetHighestItemID(client, database, collection)
 	if err != nil {
@@ -54,9 +55,9 @@ func Createpassport(ItemN string, OriginN string, client *mongo.Client, database
 		Origin:       OriginN,
 		LinkMadeFrom: LinkMadeFromN, //Ska matas in länk från IPFS som ska stores
 		LinkMakes:    LinkMakesN,    //Samma här gäller det.
-		LinkEvents:   []string{},
 		Sensitive:    SensitiveArray,
 		CreationDate: now.Format("01-02-2006"),
+		Reman:        ipnskey,
 	}
 
 	//skickar det nyskapade passport till databas
@@ -100,13 +101,13 @@ func sensetiveArray() (sensitiveArray []string) {
 		fmt.Scan(&input)
 	}
 	sensitiveArray = append(sensitiveArray, input)
-	// LinkEvents special
-	sensitiveArray = append(sensitiveArray, "2")
 	// Sensetive
 	sensitiveArray = append(sensitiveArray, "1")
 	// CreationDate
 	sensitiveArray = append(sensitiveArray, "0")
 	// CID_sen
+	sensitiveArray = append(sensitiveArray, "0")
+	// Reman events special
 	sensitiveArray = append(sensitiveArray, "0")
 	return sensitiveArray
 }
@@ -151,10 +152,12 @@ func passportMenu(client *mongo.Client, database, collection string) (itemID int
 		sensitiveArray := sensetiveArray()
 
 		LinkMakes := []string{}
+		sh := shell.NewShell("localhost:5001")
+		ipnsKey := keyGenerator(sh, "tempAlias")
 
 		//funktionsanrop för att skapa passport.
 		//TODO: ska kunna hantera querys senare
-		return Createpassport(ItemN, OriginN, client, database, collection, sensitiveArray, LinkMadeFrom, LinkMakes)
+		return Createpassport(ItemN, OriginN, client, database, collection, sensitiveArray, LinkMadeFrom, LinkMakes, ipnsKey)
 	case 2:
 		var cid string
 		fmt.Println("Enter CID to regenerate QR-Code:")

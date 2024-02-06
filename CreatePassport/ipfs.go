@@ -56,7 +56,7 @@ func pinToIPFS(cid string) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
-		fmt.Println("CID pinned successfully")
+		fmt.Println("CID: " + cid + " pinned successfully")
 	} else {
 		fmt.Println("Failed to pin CID:", resp.Status)
 	}

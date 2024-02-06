@@ -16,7 +16,7 @@ type TestClaim struct {
 func getHandler(writer http.ResponseWriter, request *http.Request) {
 	keyD := "hej"
 	writer.Header().Set("Content-Type", "application/json")
-
+	var response []byte
 	//Check that messages is GET
 	if request.Method != http.MethodGet {
 		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
@@ -24,6 +24,7 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	var testClaim TestClaim
+	fmt.Println(request.Body)
 
 	// Decode JSON from the request body into the Message struct
 	err := json.NewDecoder(request.Body).Decode(&testClaim)
@@ -33,15 +34,35 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 	fmt.Println("--->CID ", testClaim.CID)
 
-	Dpp := getPassport(testClaim.CID, keyD)
-	if err != nil {
-		fmt.Println("Wrong CID", err)
-		return
-	}
-	response, err := json.Marshal(Dpp)
+	if testClaim.CID[0] == 107 { // checks if the first char is k
+		//fmt.Println("This is a public key ", key)
+		key := "/ipns/" + testClaim.CID
+		output := lsIPNS(key)
+		content, contentLenght := splitListContent(output)
+		stringindex := catContent(content, contentLenght)
 
-	writer.WriteHeader(http.StatusOK)
-	_, _ = writer.Write(response)
+		// for output := 0; output < len(stringindex); output++ {
+		// SAMUELS SKIT
+		// }
+
+		for output := range stringindex {
+			writer.WriteHeader(http.StatusOK)
+			_, _ = writer.Write(decryptIt([]byte(stringindex[output]), "hej"))
+		}
+
+	}
+	if testClaim.CID[0] == 81 { // checks if the first char is Q
+		//fmt.Println("This is a CID ", key)
+		Dpp := getPassport(testClaim.CID, keyD)
+		if err != nil {
+			fmt.Println("Wrong CID", err)
+			return
+		}
+		response, err = json.Marshal(Dpp)
+		writer.WriteHeader(http.StatusOK)
+		_, _ = writer.Write(response)
+
+	}
 
 }
 
@@ -65,7 +86,7 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var apiCheck APICheck
+	//var apiCheck APICheck
 
 	fmt.Println("Body", string(body))
 	sh := shell.NewShell("localhost:5001")

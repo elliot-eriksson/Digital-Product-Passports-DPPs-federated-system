@@ -63,11 +63,3 @@ func getSensetive(cid, key, keySen string) {
 func addFile(sh *shell.Shell, text string) (string, error) {
 	return sh.Add(strings.NewReader(text))
 }
-
-func getEvent(cid string) {
-
-}
-
-func getMadeby(cid string) {
-
-}

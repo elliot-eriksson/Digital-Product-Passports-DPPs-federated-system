@@ -8,6 +8,14 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 )
 
+// --- TEST & USAGE OF EXPORT/IMPORT PRIV KEY ---
+
+//exportPrivKey("testkey")
+//privKeyCID := uploadPrivKey()
+//fmt.Println(privKeyCID)
+//temp := strings.Split(privKeyCID, " ")
+//importPrivKey(temp[1])
+
 //SELF := "k51qzi5uqu5dgpie7j0flapmw67becwedlv5vjsvrsp634va9pl4pl3oe0yvyn"
 //LKAB := "k51qzi5uqu5dk0lknwezqu0hrcbgpbbrpynp3r5nh9typbj861k79bu8bud64t"
 //SSAB := "k51qzi5uqu5dlhsqq2mlmroidrca8vuautxhmbcmb5bvmb4g1lvljpj4fanf3x"
@@ -32,6 +40,48 @@ import (
 // content, contentLength := splitListContent(thisvar)
 // fmt.Println("content är : ", content, "med length: ", contentLength)
 // catContent(content, contentLength)
+
+func importPrivKey(CID string) {
+	// download privkey from an IPFS node
+	cmd := exec.Command("ipfs", "get", CID)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(output))
+		return
+	}
+	fmt.Println("Private key successfully downloaded under local path: ./")
+	// import private key locally, creating the option to use it yourself
+	cmd = exec.Command("ipfs", "key", "import", "newtestkey", "-f", "pem-pkcs8-cleartext", "privkey.pem")
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(output))
+		return
+	}
+	fmt.Println(string(output))
+
+}
+
+func uploadPrivKey() string {
+	cmd := exec.Command("ipfs", "add", "privkey.pem")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(output))
+		return ""
+	}
+	fmt.Println(string(output))
+	return string(output)
+}
+
+func exportPrivKey(keyAlias string) {
+	// ipfs key export testkey --format=pem-pkcs8-cleartext -o privkey.pem
+	cmd := exec.Command("ipfs", "key", "export", keyAlias, "--format=pem-pkcs8-cleartext", "-o", "privkey.pem")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(output))
+		return
+	}
+	fmt.Println("Private key successfully exported to path: ./privkey.pem")
+}
 
 // Splitting the different files into their own string.
 func splitListContent(Content string) ([]string, int) {
@@ -85,12 +135,10 @@ func lsIPNS(sh *shell.Shell, key string) (string, error) {
 	tempkey := key
 	if key[0] == 107 { // checks if the first char is k
 		//fmt.Println("This is a public key ", key)
-		separator()
 		key = "/ipns/" + key
 	}
 	if key[0] == 81 { // checks if the first char is Q
 		//fmt.Println("This is a CID ", key)
-		separator()
 		key = "/ipfs/" + key
 	}
 	cmd := exec.Command("ipfs", "ls", key)
@@ -101,7 +149,6 @@ func lsIPNS(sh *shell.Shell, key string) (string, error) {
 	}
 	if string(output) == "" {
 		fmt.Println("this is a file")
-		separator()
 		newOut, err := resolveKeyPointer(sh, tempkey)
 		if err != nil {
 			fmt.Println(string(newOut))
@@ -111,11 +158,9 @@ func lsIPNS(sh *shell.Shell, key string) (string, error) {
 		return string(newOut), err
 	} else {
 		fmt.Println("this is a directory")
-		separator()
 	}
 
 	fmt.Println(string(output))
-	separator()
 	return string(output), err
 
 }

@@ -125,6 +125,11 @@ func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
 		fmt.Scan(&CID)
 		if CID != "0" {
 			linkPassport = passportFromCID(CID)
+			sensetiveCID := fmt.Sprintf("%v", linkPassport["CID_sen"])
+			fmt.Println("CID_SEN                        ", sensetiveCID)
+			if sensetiveCID != "" {
+				pinToIPFS(sensetiveCID)
+			}
 			LinkMadeFrom = append(LinkMadeFrom, linkPassport)
 		} else {
 			inputMore = "0"

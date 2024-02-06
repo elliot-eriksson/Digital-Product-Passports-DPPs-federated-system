@@ -8,31 +8,6 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 )
 
-//SELF := "k51qzi5uqu5dgpie7j0flapmw67becwedlv5vjsvrsp634va9pl4pl3oe0yvyn"
-//LKAB := "k51qzi5uqu5dk0lknwezqu0hrcbgpbbrpynp3r5nh9typbj861k79bu8bud64t"
-//SSAB := "k51qzi5uqu5dlhsqq2mlmroidrca8vuautxhmbcmb5bvmb4g1lvljpj4fanf3x"
-//VOLVO := "k51qzi5uqu5dhqmsy1voi1wegln7cvehdqt7o2n485j451j5mqxpm1rccpzyga"
-
-//cid := "QmUbd3ZArm3fkLYK37oh17yAML218j4XuVnK4rGbG1b8Sz"
-
-// Initialize IPFS shell
-//sh := shell.NewShell("127.0.0.1:5001")
-
-// Use this to test the creation of an IPNS record. The second argument is the public key, the third key is the IPFS record we want to point at.
-//addDataToIPNS(sh, VOLVO, cid)
-
-// Use this to test the creation of public keys. The second argument (a string) is the alias for the created key.
-//fmt.Println(keyGenerator(sh, "samuelsnyckel"))
-
-// Use this to test the retrieval of an IPNS record. The second argument is a CID or a public key (string)
-// thisvar, err := lsIPNS(sh, "k51qzi5uqu5dlhsqq2mlmroidrca8vuautxhmbcmb5bvmb4g1lvljpj4fanf3x")
-// if err != nil {
-// 	fmt.Println("big error oh no")
-// }
-// content, contentLength := splitListContent(thisvar)
-// fmt.Println("content är : ", content, "med length: ", contentLength)
-// catContent(content, contentLength)
-
 // Splitting the different files into their own string.
 func splitListContent(Content string) ([]string, int) {
 	temp := strings.Split(Content, "\n")
@@ -70,18 +45,6 @@ func catContent(CID []string, length int) (contentIndex []string) {
 		}
 	}
 	return contentIndex
-	// } else {
-	// 	tempString := splitIndex[0]
-	// 	tempString = tempString[6:]
-	// 	cmd := exec.Command("ipfs", "cat", tempString)
-	// 	output, err := cmd.CombinedOutput()
-	// 	if err != nil {
-	// 		fmt.Println(string(output))
-	// 		return
-	// 	}
-	// 	fmt.Println("The content of the file", tempString, "is:", string(output))
-	// 	return output
-	// }
 
 }
 
@@ -97,40 +60,24 @@ func lsIPNS(key string) string {
 		fmt.Println(string(output))
 		return ""
 	}
-	// if string(output) == "" {
-	// 	fmt.Println("this is a file")
-	// 	newOut, err := resolveKeyPointer(sh, tempkey)
-	// 	if err != nil {
-	// 		fmt.Println(string(newOut))
-	// 		return "", err
-	// 	}
-	// 	fmt.Println(newOut)
-	// 	return string(newOut), err
-	// } else {
-	// 	fmt.Println("this is a directory")
-	// }
-
-	// fmt.Println(string(output))
 	return string(output)
 
 }
 
 // Generates public key
-func keyGenerator(sh *shell.Shell, keyAlias string) string {
+func keyGenerator(keyAlias string) string {
 	cmd := exec.Command("ipfs", "key", "gen", keyAlias)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(string(output))
 		return string(output)
 	}
-	fmt.Println("The public key value is : ", output)
 	output = []byte(strings.TrimSuffix(string(output), "\n"))
-	fmt.Println("The public key value is: ", string(output))
 	return string(output)
 }
 
-func keyRename(newAlias string) {
-	cmd := exec.Command("ipfs", "key", "rename", "tempAlias", newAlias)
+func keyRename(oldAlias, newAlias string) {
+	cmd := exec.Command("ipfs", "key", "rename", oldAlias, newAlias)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(string(output))

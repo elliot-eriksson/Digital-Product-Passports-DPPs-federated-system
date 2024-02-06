@@ -13,11 +13,13 @@ import (
 
 func main() {
 
-	getURL := "/get-endpoint"
+	getURL := "/get-CID"
+	getKey := "/get-publicKey"
 	createPassportURL := "/put-createPassport"
 	addRemanafactureEventURL := "/put-addRemanafactureEvent"
 
 	http.HandleFunc(getURL, getHandler)
+	http.HandleFunc(getKey, generateKey)
 	http.HandleFunc(createPassportURL, createPassportHandler)
 	http.HandleFunc(addRemanafactureEventURL, addRemanafactureEventHandler)
 
@@ -25,9 +27,9 @@ func main() {
 	// http.HandleFunc("/home", handlePage)
 
 	// Start the server on port 8080
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8081", nil)
 	if err != nil {
-		log.Println("There was an error listening on port :8080", err)
+		log.Println("There was an error listening on port :8081", err)
 	}
 
 	// ------------ SUNES GREJER --------------

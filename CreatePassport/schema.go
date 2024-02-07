@@ -44,7 +44,7 @@ func Createpassport(ItemN string, OriginN string, client *mongo.Client, database
 	if err != nil {
 		log.Fatal("Error getting highest itemid:", err)
 	}
-	log.Println("Highest ItemID:", highestItemID)
+	//log.Println("Highest ItemID:", highestItemID)
 	now := time.Now()
 	newItemID := highestItemID + 1
 
@@ -56,27 +56,18 @@ func Createpassport(ItemN string, OriginN string, client *mongo.Client, database
 		LinkMadeFrom: LinkMadeFromN, //Ska matas in länk från IPFS som ska stores
 		LinkMakes:    LinkMakesN,    //Samma här gäller det.
 		Sensitive:    SensitiveArray,
-		CreationDate: now.Format("01-02-2006"),
+		CreationDate: now.Format("2006-01-02"),
 		Reman:        ipnskey,
 	}
 
 	//skickar det nyskapade passport till databas
 	Coll := client.Database(database).Collection(collection)
 	var ctx = context.TODO()
-	insertResult, err := Coll.InsertOne(ctx, Passport)
+	_, err = Coll.InsertOne(ctx, Passport)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	//ser till att vi disconnectar från databasen även om ett error skulle förekomma vid insert till databas
-	// defer func() {
-	// 	if err = client.Disconnect(context.TODO()); err != nil {
-	// 		panic(err)
-	// 	}
-	// }()
-	fmt.Println(insertResult)
 	return newItemID
-
 }
 
 // Creates a way to split data from database to implement diffrent access levels with different encryption
@@ -100,6 +91,7 @@ func sensetiveArray() (sensitiveArray []string) {
 		fmt.Print("LinkMakes: ")
 		fmt.Scan(&input)
 	}
+	separator()
 	sensitiveArray = append(sensitiveArray, input)
 	// Sensetive
 	sensitiveArray = append(sensitiveArray, "1")
@@ -128,7 +120,6 @@ func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
 			delete(linkPassport, "LinkMadeFrom")
 			delete(linkPassport, "LinkMakes")
 			sensetiveCID := fmt.Sprintf("%v", linkPassport["CID_sen"])
-			fmt.Println("CID_SEN ", sensetiveCID)
 			if sensetiveCID != "" {
 				pinToIPFS(sensetiveCID)
 			}

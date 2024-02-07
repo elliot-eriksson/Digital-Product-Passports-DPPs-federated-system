@@ -16,7 +16,7 @@ import (
 )
 
 func separator() {
-	fmt.Println("--------------------------")
+	fmt.Println("---------------------------------------------------------------------------------------------------------------")
 }
 
 func performChecks(sh *shell.Shell) error {
@@ -62,12 +62,10 @@ func jsonFormat(data primitive.A) (newJsonData string) {
 func updateDatabase(client *mongo.Client, ctx context.Context, dataBase, col string, filter interface{}, update interface{}) {
 	// update database with the data from the update by using filter to choose what to update
 	coll := client.Database(dataBase).Collection(col)
-	result, err := coll.UpdateOne(context.TODO(), filter, update)
+	_, err := coll.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("CID Upload successful", result)
-
 }
 
 // Split passport into two seperate parts of either sensitive or non sensitive

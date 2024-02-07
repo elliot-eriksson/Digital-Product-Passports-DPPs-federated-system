@@ -15,9 +15,6 @@ import (
 // Paste here the local path of your computer where the file will be downloaded
 const YourLocalPath = "C:/Users/boink/Desktop/test"
 
-// // Paste here the local path of your computer where the file will be downloaded
-// const YourLocalPath = "C:/Users/Ellio/Desktop/test"
-
 func addFile(sh *shell.Shell, text string) (string, error) {
 	return sh.Add(strings.NewReader(text))
 }
@@ -90,7 +87,6 @@ func ipfs(upploadString string) (string, error) {
 		return "", err
 	}
 
-	// 1. Add the "Hello from Launchpad!" text to IPFS
 	// fmt.Println("Adding file to IPFS")
 	cid, err := addFile(sh, upploadString)
 	if err != nil {
@@ -99,7 +95,6 @@ func ipfs(upploadString string) (string, error) {
 	}
 	fmt.Println("File added with CID:", cid)
 
-	// cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"
 	separator()
 
 	// 2. Read the file by using the generated CID
@@ -109,20 +104,10 @@ func ipfs(upploadString string) (string, error) {
 		fmt.Println("Error reading the file:", err.Error())
 		return "", err
 	}
-	fmt.Println("Content of the file:", *text)
+	separator()
+	fmt.Println("Content of the file encrypted: \n", *text)
+	separator()
 	fmt.Println("Content of the file decrypt:", string(decryptIt([]byte(*text), "hej")))
-
-	// separator()
-	// // cid = "QmUNGLqawa7dgDNBSt1yzR9sWphSCPppUYUFAkyKEDzyaH"
-	// // 3. Download the file to your computer
-	// // fmt.Println("Downloading file")
-	// err = downloadFile(sh, cid)
-	// if err != nil {
-	// 	fmt.Println("Error downloading file:", err.Error())
-	// 	return "", err
-	// }
-	// fmt.Println("File downloaded")
-
+	separator()
 	return cid, err
-	// separator()
 }

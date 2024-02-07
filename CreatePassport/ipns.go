@@ -173,7 +173,6 @@ func keyGenerator(sh *shell.Shell, keyAlias string) string {
 		fmt.Println(string(output))
 		return string(output)
 	}
-	fmt.Println("The public key value is : ", output)
 	output = []byte(strings.TrimSuffix(string(output), "\n"))
 	fmt.Println("The public key value is: ", string(output))
 	return string(output)

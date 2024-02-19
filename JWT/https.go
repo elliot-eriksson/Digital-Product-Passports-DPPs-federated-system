@@ -127,8 +127,8 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 type RemanEvent struct {
-	key  string `json: Key`
-	data string `json: Data`
+	Key  string `json: Key`
+	Data string `json: Data`
 }
 
 func addRemanafactureEventHandler(writer http.ResponseWriter, request *http.Request) {
@@ -149,13 +149,22 @@ func addRemanafactureEventHandler(writer http.ResponseWriter, request *http.Requ
 
 	var remanEvent RemanEvent
 	fmt.Println(request.Body)
+	fmt.Println("Bodddy", string(body))
 
-	// Decode JSON from the request body into the Message struct
-	err = json.NewDecoder(request.Body).Decode(&remanEvent)
+	// Decode JSON from the request body into the remanEvent struct
+	//err = json.NewDecoder(request.Body).Decode(&remanEvent)
+	err = json.Unmarshal(body, &remanEvent)
+	if err != nil {
+		fmt.Println("Put request failed", err)
+	}
+	// fmt.Println("remanevent", remanEvent)
+	// fmt.Println("data :", remanEvent.Data)
+	// fmt.Println("wowowow", remanEvent.Key)
 
 	sh := shell.NewShell("localhost:5001")
-	cid, err := addFile(sh, string(body))
-	output, _ := addDataToIPNS(sh, remanEvent.key, cid)
+	cid, err := addFile(sh, remanEvent.Data)
+	fmt.Println("samuels print cid: ", cid)
+	output, _ := addDataToIPNS(sh, remanEvent.Key, cid)
 
 	fmt.Println("publised", output)
 

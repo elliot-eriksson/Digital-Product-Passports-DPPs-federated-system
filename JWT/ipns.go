@@ -45,7 +45,6 @@ func catContent(CID []string, length int) (contentIndex []string) {
 		}
 	}
 	return contentIndex
-
 }
 
 // Helper function to find out if its and directory or just an file.
@@ -121,6 +120,12 @@ func cidToCMD(cid string) string {
 
 // Uploads data to IPNS and return that adress, also does the same when you want to update information.
 func addDataToIPNS(sh *shell.Shell, key string, cid string) (string, error) {
+
+	fmt.Println(key)
+	if key == "" {
+		fmt.Println("ERROR: key is empty")
+		return "", nil
+	}
 	cmd := exec.Command("ipfs", "name", "publish", hashToCMD(key), cidToCMD(cid))
 	output, err := cmd.CombinedOutput()
 	if err != nil {

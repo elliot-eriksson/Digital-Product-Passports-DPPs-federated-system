@@ -189,8 +189,8 @@ func keyRename(newAlias string) {
 	return
 }
 
-func keyRenameTHESEQUEL(newAlias string, input string) {
-	cmd := exec.Command("ipfs", "key", "rename", input, "LinkMakes"+newAlias)
+func keyRenameLinkMakes(newAlias string, input string) {
+	cmd := exec.Command("ipfs", "key", "rename", input, "LinkMakes_"+newAlias)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(string(output))

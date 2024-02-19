@@ -117,6 +117,7 @@ func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
 		fmt.Scan(&CID)
 		if CID != "0" {
 			linkPassport = passportFromCID(CID)
+			//fmt.Println("\nHär börjar testprint\n", linkPassport, "\nHär slutar testprint\n")
 			delete(linkPassport, "LinkMadeFrom")
 			delete(linkPassport, "LinkMakes")
 			sensetiveCID := fmt.Sprintf("%v", linkPassport["CID_sen"])

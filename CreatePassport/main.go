@@ -62,7 +62,7 @@ func main() {
 		resultM2, resultD2, err := queryPassport(client, ctx, database, collection, filter)
 		cid = uploadAndUpdateCID(0, resultM2, resultD2, client, database, collection)
 		keyRename(cid)
-		keyRenameTHESEQUEL(cid, randomName)
+		keyRenameLinkMakes(cid, randomName)
 		generateQRCode(cid)
 	}
 }

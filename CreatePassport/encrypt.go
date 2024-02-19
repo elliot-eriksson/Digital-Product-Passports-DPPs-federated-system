@@ -12,14 +12,13 @@ import (
 	"encoding/hex"
 )
 
-var keyPhrase string = "Potatis1"
-
 func mdHashing(input string) string {
 	byteInput := []byte(input)
 	md5Hash := md5.Sum(byteInput)
 	return hex.EncodeToString(md5Hash[:]) // by referring to it as a string
 }
 
+// Encrypts the data using AES encoding
 func encryptIt(value []byte, key string) []byte {
 	aesBlock, err := aes.NewCipher([]byte(mdHashing(key)))
 	if err != nil {
@@ -31,6 +30,7 @@ func encryptIt(value []byte, key string) []byte {
 		fmt.Println(err)
 	}
 
+	// Might want to not use random nonce to make sure that same information give the same CID after encryption
 	nonce := make([]byte, gcmInstance.NonceSize())
 	_, _ = io.ReadFull(rand.Reader, nonce)
 
@@ -39,6 +39,7 @@ func encryptIt(value []byte, key string) []byte {
 	return cipheredText
 }
 
+// decrypts the data
 func decryptIt(ciphered []byte, keyPhrase string) []byte {
 	hashedPhrase := mdHashing(keyPhrase)
 	aesBlock, err := aes.NewCipher([]byte(hashedPhrase))

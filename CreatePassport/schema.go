@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"time"
 
-	shell "github.com/ipfs/go-ipfs-api"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -110,7 +110,7 @@ func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
 	var CID, inputMore string
 	var linkPassport map[string]interface{}
 	// var data []map[string]interface{}
-	fmt.Println("Press 1 to start entering CIDs for LinkMadeFrom: ")
+	fmt.Println("Press 1 to start entering CIDs for LinkMadeFrom. Press 0 if your product is not made from something: ")
 	fmt.Scan(&inputMore)
 	for inputMore == "1" {
 		fmt.Println("Enter CID (Enter 0 if no more): ")
@@ -128,10 +128,23 @@ func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
 			inputMore = "0"
 		}
 	}
+	// create linkMakes in referenced object
 	return LinkMadeFrom
 }
 
-func passportMenu(client *mongo.Client, database, collection string) (itemID int) {
+func LinkMakes(alias string) string {
+	out := keyGenerator(alias)
+	return out
+}
+func randSeq(n int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+func passportMenu(client *mongo.Client, database, collection string) (itemID int, str string) {
 	//temporär input för test ändamål, ska ändras framöver för att kunna göras via hemsida/program etc
 	var i int
 	fmt.Println("What do you want to do? 1: Createpassport, 2: Regenerate QR code")
@@ -147,25 +160,28 @@ func passportMenu(client *mongo.Client, database, collection string) (itemID int
 		fmt.Scan(&OriginN)
 		// var LinkMadeFrom []string
 		LinkMadeFrom := LinkMadeFrom()
+		randomName := randSeq(10) //Glöm ej!!!!
+		LinkMakesTemp := LinkMakes(randomName)
 		sensitiveArray := sensetiveArray()
 
 		LinkMakes := []string{}
-		sh := shell.NewShell("localhost:5001")
-		ipnsKey := keyGenerator(sh, "tempAlias")
+		LinkMakes = append(LinkMakes, LinkMakesTemp)
+		//sh := shell.NewShell("localhost:5001")
+		ipnsKey := keyGenerator("tempAlias")
 
 		//funktionsanrop för att skapa passport.
 		//TODO: ska kunna hantera querys senare
-		return Createpassport(ItemN, OriginN, client, database, collection, sensitiveArray, LinkMadeFrom, LinkMakes, ipnsKey)
+		return Createpassport(ItemN, OriginN, client, database, collection, sensitiveArray, LinkMadeFrom, LinkMakes, ipnsKey), randomName
 	case 2:
 		var cid string
 		fmt.Println("Enter CID to regenerate QR-Code:")
 		fmt.Scan(&cid)
 		generateQRCode(cid)
-		return 0
+		return 0, ""
 
 	default:
 		fmt.Println("Error")
 
 	}
-	return 0
+	return 0, ""
 }

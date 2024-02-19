@@ -47,7 +47,7 @@ func main() {
 	}
 
 	//funktionsanrop för passport meny. Presenterar en med 2 stycken val just nu. Antingen skapa ett nytt passport eller återskapa en qr-kod
-	itemID := passportMenu(client, database, collection)
+	itemID, randomName := passportMenu(client, database, collection)
 	if itemID != 0 {
 		var filter interface{}
 		filter = bson.D{{"ItemID", itemID}}
@@ -62,6 +62,7 @@ func main() {
 		resultM2, resultD2, err := queryPassport(client, ctx, database, collection, filter)
 		cid = uploadAndUpdateCID(0, resultM2, resultD2, client, database, collection)
 		keyRename(cid)
+		keyRenameTHESEQUEL(cid, randomName)
 		generateQRCode(cid)
 	}
 }

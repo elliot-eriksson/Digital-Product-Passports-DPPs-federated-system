@@ -166,7 +166,7 @@ func lsIPNS(sh *shell.Shell, key string) (string, error) {
 }
 
 // Generates public key
-func keyGenerator(sh *shell.Shell, keyAlias string) string {
+func keyGenerator(keyAlias string) string {
 	cmd := exec.Command("ipfs", "key", "gen", keyAlias)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -180,6 +180,17 @@ func keyGenerator(sh *shell.Shell, keyAlias string) string {
 
 func keyRename(newAlias string) {
 	cmd := exec.Command("ipfs", "key", "rename", "tempAlias", newAlias)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(output))
+		return
+	}
+	fmt.Println(string(output))
+	return
+}
+
+func keyRenameTHESEQUEL(newAlias string, input string) {
+	cmd := exec.Command("ipfs", "key", "rename", input, "LinkMakes"+newAlias)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(string(output))

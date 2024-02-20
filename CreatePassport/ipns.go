@@ -233,11 +233,12 @@ func cidToCMD(cid string) string {
 }
 
 // Uploads data to IPNS and return that adress, also does the same when you want to update information.
-func addDataToIPNS(sh *shell.Shell, key string, cid string) (string, error) {
+func addDataToIPNS(key string, cid string) string {
 	cmd := exec.Command("ipfs", "name", "publish", hashToCMD(key), cidToCMD(cid))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("failed to publish IPNS record: %v, output: %s", err, output)
+		return string(output)
+		//return fmt.Errorf("failed to publish IPNS record: %v, output: %s", err, output)
 	}
-	return string(output), nil
+	return string(output)
 }

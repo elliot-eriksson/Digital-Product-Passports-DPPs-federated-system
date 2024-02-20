@@ -16,6 +16,7 @@ func main() {
 	var database string
 	var collection string
 	var cid string
+	var lmArray []string
 
 	// Lets you chose witch of the three test database create to uppdate.
 	fmt.Println("What database and table do you want? 1: LKAB, 2: SSAB, 3: VOLVO")
@@ -47,7 +48,7 @@ func main() {
 	}
 
 	//funktionsanrop för passport meny. Presenterar en med 2 stycken val just nu. Antingen skapa ett nytt passport eller återskapa en qr-kod
-	itemID, randomName := passportMenu(client, database, collection)
+	itemID, randomName, lmArray := passportMenu(client, database, collection, lmArray)
 	if itemID != 0 {
 		var filter interface{}
 		filter = bson.D{{"ItemID", itemID}}
@@ -63,6 +64,10 @@ func main() {
 		cid = uploadAndUpdateCID(0, resultM2, resultD2, client, database, collection)
 		keyRename(cid)
 		keyRenameLinkMakes(cid, randomName)
-		generateQRCode(cid)
+		//generateQRCode(cid)
+		fmt.Println(lmArray)
+		if len(lmArray) > 0 {
+			LinkMakesPointerUpdate(lmArray)
+		}
 	}
 }

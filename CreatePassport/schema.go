@@ -106,9 +106,10 @@ func sensetiveArray() (sensitiveArray []string) {
 
 // Retrieves the passport infromation from the CID/products the passport is created from
 // TODO Needs to retrieve the key the given CID is encrypted with
-func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
+func LinkMadeFrom(lmArray []string) ([]map[string]interface{}, []string) {
 	var CID, inputMore string
 	var linkPassport map[string]interface{}
+	var LinkMadeFrom []map[string]interface{}
 	// var data []map[string]interface{}
 	fmt.Println("Press 1 to start entering CIDs for LinkMadeFrom. Press 0 if your product is not made from something: ")
 	fmt.Scan(&inputMore)
@@ -117,6 +118,7 @@ func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
 		fmt.Scan(&CID)
 		if CID != "0" {
 			linkPassport = passportFromCID(CID)
+			lmArray = LinkMakesAppend(lmArray, CID)
 			//fmt.Println("\nHär börjar testprint\n", linkPassport, "\nHär slutar testprint\n")
 			delete(linkPassport, "LinkMadeFrom")
 			delete(linkPassport, "LinkMakes")
@@ -128,9 +130,19 @@ func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
 		} else {
 			inputMore = "0"
 		}
+
 	}
 	// create linkMakes in referenced object
-	return LinkMadeFrom
+	return LinkMadeFrom, lmArray
+}
+
+// TODO: retrieve private key from CA
+func LinkMakesPointerUpdate(lmArray []string) {
+	for i := range lmArray {
+		pkey := "k51qzi5uqu5dk2i4blnf7qwri0gf2he2cdyp10of13aqclrrdklhha1605lu0i" //temporary, key should be retrieved dynamically from CA
+		out := addDataToIPNS(pkey, lmArray[i])
+		fmt.Println(out)
+	}
 }
 
 func LinkMakes(alias string) string {
@@ -145,9 +157,17 @@ func randSeq(n int) string {
 	}
 	return string(b)
 }
-func passportMenu(client *mongo.Client, database, collection string) (itemID int, str string) {
+
+func LinkMakesAppend(lmArray []string, CID string) []string {
+	lmArray = append(lmArray, CID)
+	fmt.Println("----------------------->", lmArray)
+	return lmArray
+}
+
+func passportMenu(client *mongo.Client, database, collection string, lmArray []string) (int, string, []string) {
 	//temporär input för test ändamål, ska ändras framöver för att kunna göras via hemsida/program etc
 	var i int
+
 	fmt.Println("What do you want to do? 1: Createpassport, 2: Regenerate QR code")
 	fmt.Scan(&i)
 	switch i {
@@ -160,7 +180,7 @@ func passportMenu(client *mongo.Client, database, collection string) (itemID int
 		fmt.Println("Enter item origin : ")
 		fmt.Scan(&OriginN)
 		// var LinkMadeFrom []string
-		LinkMadeFrom := LinkMadeFrom()
+		LinkMadeFrom, lmArray := LinkMadeFrom(lmArray)
 		randomName := randSeq(10) //Glöm ej!!!!
 		LinkMakesTemp := LinkMakes(randomName)
 		sensitiveArray := sensetiveArray()
@@ -172,17 +192,17 @@ func passportMenu(client *mongo.Client, database, collection string) (itemID int
 
 		//funktionsanrop för att skapa passport.
 		//TODO: ska kunna hantera querys senare
-		return Createpassport(ItemN, OriginN, client, database, collection, sensitiveArray, LinkMadeFrom, LinkMakes, ipnsKey), randomName
+		return Createpassport(ItemN, OriginN, client, database, collection, sensitiveArray, LinkMadeFrom, LinkMakes, ipnsKey), randomName, lmArray
 	case 2:
 		var cid string
 		fmt.Println("Enter CID to regenerate QR-Code:")
 		fmt.Scan(&cid)
 		generateQRCode(cid)
-		return 0, ""
+		return 0, "", lmArray
 
 	default:
 		fmt.Println("Error")
 
 	}
-	return 0, ""
+	return 0, "", lmArray
 }

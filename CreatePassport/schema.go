@@ -136,13 +136,11 @@ func LinkMadeFrom(lmArray []string) ([]map[string]interface{}, []string) {
 	return LinkMadeFrom, lmArray
 }
 
-// TODO: retrieve private key from CA
-func LinkMakesPointerUpdate(lmArray []string) {
-	for i := range lmArray {
-		pkey := "k51qzi5uqu5dk2i4blnf7qwri0gf2he2cdyp10of13aqclrrdklhha1605lu0i" //temporary, key should be retrieved dynamically from CA
-		out := addDataToIPNS(pkey, lmArray[i])
-		fmt.Println(out)
-	}
+// TODO: retrieve private key from CA. lmArray is an array filled with the CIDs of the products which we need to retrieve private keys for.
+func LinkMakesPointerUpdate(lmArray []string, cid string) {
+	privatekey := "k51qzi5uqu5dk2i4blnf7qwri0gf2he2cdyp10of13aqclrrdklhha1605lu0i"
+	out := addDataToIPNS(privatekey, cid)
+	fmt.Println(out)
 }
 
 func LinkMakes(alias string) string {

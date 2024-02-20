@@ -67,7 +67,7 @@ func main() {
 		//generateQRCode(cid)
 		fmt.Println(lmArray)
 		if len(lmArray) > 0 {
-			LinkMakesPointerUpdate(lmArray)
+			LinkMakesPointerUpdate(lmArray, cid)
 		}
 	}
 }

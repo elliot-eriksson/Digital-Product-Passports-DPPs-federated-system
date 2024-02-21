@@ -17,7 +17,7 @@ type TestClaim struct {
 func getHandler(writer http.ResponseWriter, request *http.Request) {
 	keyD := "hej"
 	writer.Header().Set("Content-Type", "application/json")
-	var response []byte
+	// var response []byte
 	//Check that messages is GET
 	if request.Method != http.MethodGet {
 		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
@@ -43,7 +43,7 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 		stringindex := catContent(content, contentLenght)
 		for output := range stringindex {
 			writer.WriteHeader(http.StatusOK)
-			_, _ = writer.Write(decryptIt([]byte(stringindex[output]), "hej"))
+			_, _ = writer.Write([]byte(stringindex[output]))
 		}
 	}
 	if testClaim.CID[0] == 81 { // checks if the first char is Q
@@ -53,9 +53,10 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 			fmt.Println("Wrong CID", err)
 			return
 		}
-		response, err = json.Marshal(Dpp)
+		fmt.Println("GETHANDLER INNAN MARSHAL ", Dpp)
+		// response, err = json.Marshal(Dpp)
 		writer.WriteHeader(http.StatusOK)
-		_, _ = writer.Write(response)
+		_, _ = writer.Write([]byte(Dpp))
 
 	}
 

@@ -51,16 +51,19 @@ func main() {
 	if itemID != 0 {
 		var filter interface{}
 		filter = bson.D{{"ItemID", itemID}}
-		resultM, resultD, err := queryPassport(client, ctx, database, collection, filter)
+		passData, err := queryPassport(client, ctx, database, collection, filter)
+		fmt.Println("MAIN QUERRY1", passData)
+		fmt.Println("MAIN ERR", err)
 		if err != nil {
+			fmt.Println("PANIC MAIN")
 			panic(err)
 		}
 
 		// 1 for Sensitive Passport
-		cid = uploadAndUpdateCID(1, resultM, resultD, client, database, collection)
+		cid = uploadAndUpdateCID("sensitiveArray", passData, client, database, collection)
 		// 0 for Non Sensitive Passport
-		resultM2, resultD2, err := queryPassport(client, ctx, database, collection, filter)
-		cid = uploadAndUpdateCID(0, resultM2, resultD2, client, database, collection)
+		passData2, err := queryPassport(client, ctx, database, collection, filter)
+		cid = uploadAndUpdateCID("nonSensitiveArray", passData2, client, database, collection)
 		keyRename(cid)
 		generateQRCode(cid)
 	}

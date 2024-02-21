@@ -6,7 +6,6 @@ import (
 	"log"
 	"time"
 
-	shell "github.com/ipfs/go-ipfs-api"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -38,32 +37,20 @@ func GetHighestItemID(client *mongo.Client, dbName, collectionName string) (int,
 }
 
 // TODO: Ändra så att funktionen tar query parametrar istället för hårdkodad data
-func Createpassport(ItemN string, OriginN string, client *mongo.Client, database, collection string, SensitiveArray []string, LinkMadeFromN []map[string]interface{}, LinkMakesN []string, ipnskey string) (itemID int) {
+func Createpassport(client *mongo.Client, database, collection string, passData map[string]interface{}) (itemID int) {
 	//funktionsanrop för att hämta det nuvarande högsta mongodb passport _id i databasen
 	highestItemID, err := GetHighestItemID(client, database, collection)
 	if err != nil {
 		log.Fatal("Error getting highest itemid:", err)
 	}
-	//log.Println("Highest ItemID:", highestItemID)
-	now := time.Now()
 	newItemID := highestItemID + 1
 
-	//Hämtar PassPort struct i models och ger den värden
-	Passport := PassPort{
-		ItemID:       newItemID,
-		ItemName:     ItemN,
-		Origin:       OriginN,
-		LinkMadeFrom: LinkMadeFromN, //Ska matas in länk från IPFS som ska stores
-		LinkMakes:    LinkMakesN,    //Samma här gäller det.
-		Sensitive:    SensitiveArray,
-		CreationDate: now.Format("2006-01-02"),
-		Reman:        ipnskey,
-	}
+	passData["ItemID"] = newItemID
 
 	//skickar det nyskapade passport till databas
 	Coll := client.Database(database).Collection(collection)
 	var ctx = context.TODO()
-	_, err = Coll.InsertOne(ctx, Passport)
+	_, err = Coll.InsertOne(ctx, passData)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -131,6 +118,60 @@ func LinkMadeFrom() (LinkMadeFrom []map[string]interface{}) {
 	return LinkMadeFrom
 }
 
+func dynamicPassportData() map[string]interface{} {
+	out := make(map[string]interface{})
+	var ItemN, OriginN, Company string
+	var DKey, DValue, isSensitive string
+	var sensitiveArray, nonSensitiveArray []string
+	fmt.Println("Enter item name : ")
+	fmt.Scan(&ItemN)
+	fmt.Println("Enter item origin : ")
+	fmt.Scan(&OriginN)
+	fmt.Println("Enter Company : ")
+	fmt.Scan(&Company)
+
+	out["ItemName"] = ItemN
+	out["Origin"] = OriginN
+	out["Company"] = Company
+	out["LinkMadeFrom"] = LinkMadeFrom()
+	out["CreationDate"] = time.Now().Format("2006-01-02")
+	nonSensitiveArray = append(nonSensitiveArray, "Name")
+	nonSensitiveArray = append(nonSensitiveArray, "Origin")
+	nonSensitiveArray = append(nonSensitiveArray, "Company")
+	nonSensitiveArray = append(nonSensitiveArray, "LinkMadeFrom")
+	dynamicInput := "1"
+
+	for dynamicInput == "1" {
+		fmt.Println("Enter product key (Enter 0 if no more): ")
+		fmt.Scan(&DKey)
+		if DKey == "0" {
+			break
+		}
+		fmt.Println("Enter product value: ")
+		fmt.Scan(&DValue)
+
+		out[DKey] = DValue
+
+		fmt.Println("Is it sensitive? y/n: ")
+		fmt.Scan(&isSensitive)
+
+		for isSensitive != "y" && isSensitive != "n" {
+			fmt.Println("Input must be y or n")
+			fmt.Print("Is it sensitive? y/n: ")
+			fmt.Scan(&isSensitive)
+		}
+		if isSensitive == "y" {
+			sensitiveArray = append(sensitiveArray, DKey)
+		} else if isSensitive == "n" {
+			nonSensitiveArray = append(nonSensitiveArray, DKey)
+		}
+	}
+	out["sensitiveArray"] = sensitiveArray
+	out["nonSensitiveArray"] = nonSensitiveArray
+	fmt.Println("DYNAMICPASSDATA OUT ", out)
+	return out
+}
+
 func passportMenu(client *mongo.Client, database, collection string) (itemID int) {
 	//temporär input för test ändamål, ska ändras framöver för att kunna göras via hemsida/program etc
 	var i int
@@ -140,22 +181,14 @@ func passportMenu(client *mongo.Client, database, collection string) (itemID int
 	case 1:
 
 		//testinput av item name samt item origin
-		var ItemN, OriginN string
-		fmt.Println("Enter item name : ")
-		fmt.Scan(&ItemN)
-		fmt.Println("Enter item origin : ")
-		fmt.Scan(&OriginN)
-		// var LinkMadeFrom []string
-		LinkMadeFrom := LinkMadeFrom()
-		sensitiveArray := sensetiveArray()
 
-		LinkMakes := []string{}
-		sh := shell.NewShell("localhost:5001")
-		ipnsKey := keyGenerator(sh, "tempAlias")
+		passportData := dynamicPassportData()
+		// sh := shell.NewShell("localhost:5001")
+		// ipnsKey := keyGenerator(sh, "tempAlias")
 
 		//funktionsanrop för att skapa passport.
 		//TODO: ska kunna hantera querys senare
-		return Createpassport(ItemN, OriginN, client, database, collection, sensitiveArray, LinkMadeFrom, LinkMakes, ipnsKey)
+		return Createpassport(client, database, collection, passportData)
 	case 2:
 		var cid string
 		fmt.Println("Enter CID to regenerate QR-Code:")

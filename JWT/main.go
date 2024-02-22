@@ -18,7 +18,7 @@ func main() {
 	http.HandleFunc(getURL, getHandler)
 	http.HandleFunc(getKey, generateKey)
 	http.HandleFunc(createPassportURL, createPassportHandler)
-	http.HandleFunc(addRemanafactureEventURL, addRemanafactureEventHandler)
+	http.HandleFunc(addRemanafactureEventURL, addMutableData)
 
 	// Define a route handler for the "/home" endpoint
 	// http.HandleFunc("/home", handlePage)

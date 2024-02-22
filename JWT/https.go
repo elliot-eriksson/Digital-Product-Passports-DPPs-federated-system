@@ -31,14 +31,15 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 	err := json.NewDecoder(request.Body).Decode(&testClaim)
 	if err != nil {
 		fmt.Println("Get request failed", err)
+		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
 		return
 	}
-	fmt.Println("--->CID ", testClaim.CID)
+	// fmt.Println("--->CID ", testClaim.CID)
 
 	if testClaim.CID[0] == 107 { // checks if the first char is k
 		//fmt.Println("This is a public key ", key)
 		key := "/ipns/" + testClaim.CID
-		output := lsIPNS(key)
+		output := getPassport(key, keyD)
 		content, contentLenght := splitListContent(output)
 		stringindex := catContent(content, contentLenght)
 		for output := range stringindex {
@@ -48,12 +49,13 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 	if testClaim.CID[0] == 81 { // checks if the first char is Q
 		//fmt.Println("This is a CID ", key)
-		Dpp := getPassport(testClaim.CID, keyD)
+		CID := "/ipfs/" + testClaim.CID
+		Dpp := getPassport(CID, keyD)
 		if err != nil {
 			fmt.Println("Wrong CID", err)
 			return
 		}
-		fmt.Println("GETHANDLER INNAN MARSHAL ", Dpp)
+		// fmt.Println("GETHANDLER INNAN MARSHAL ", Dpp)
 		// response, err = json.Marshal(Dpp)
 		writer.WriteHeader(http.StatusOK)
 		_, _ = writer.Write([]byte(Dpp))
@@ -107,7 +109,7 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	body, err := io.ReadAll(request.Body)
 	if err != nil {
 		fmt.Println("Error reading body", err)
-		http.Error(writer, "Error reading body", http.StatusMethodNotAllowed)
+		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
 		return
 	}
 
@@ -117,22 +119,27 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	sh := shell.NewShell("localhost:5001")
 
 	cid, err := addFile(sh, string(body))
+	if err != nil {
+		fmt.Println("Error uploading to IPFS", err)
+		http.Error(writer, "Error uploading to IPFS", http.StatusInternalServerError)
+		return
+	}
 	fmt.Println("cid----", cid)
 
 	response, err := json.Marshal(cid)
 
 	writer.WriteHeader(http.StatusOK)
 	_, _ = writer.Write(response)
-	_, _ = writer.Write([]byte(cid))
+	// _, _ = writer.Write([]byte(cid))
 
 }
 
-type RemanEvent struct {
+type MutableData struct {
 	Key  string `json: Key`
 	Data string `json: Data`
 }
 
-func addRemanafactureEventHandler(writer http.ResponseWriter, request *http.Request) {
+func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	fmt.Println("REQUEST METHODE", request.Method)
 	//Check that messages is Put
@@ -144,28 +151,39 @@ func addRemanafactureEventHandler(writer http.ResponseWriter, request *http.Requ
 	body, err := io.ReadAll(request.Body)
 	if err != nil {
 		fmt.Println("Error reading body", err)
-		http.Error(writer, "Error reading body", http.StatusMethodNotAllowed)
+		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
 		return
 	}
 
-	var remanEvent RemanEvent
+	var mutableData MutableData
 	fmt.Println(request.Body)
 	fmt.Println("Bodddy", string(body))
 
 	// Decode JSON from the request body into the remanEvent struct
 	//err = json.NewDecoder(request.Body).Decode(&remanEvent)
-	err = json.Unmarshal(body, &remanEvent)
+	err = json.Unmarshal(body, &mutableData)
 	if err != nil {
 		fmt.Println("Put request failed", err)
 	}
+
+	// //fmt.Println("This is a public key ", key)
+	// key := "/ipns/" + mutableData.Key
+	// output := lsIPNS(key)
+	// content, contentLenght := splitListContent(output)
+	// stringindex := catContent(content, contentLenght)
+	// for output := range stringindex {
+	// 	writer.WriteHeader(http.StatusOK)
+	// 	_, _ = writer.Write([]byte(stringindex[output]))
+	// }
+
 	// fmt.Println("remanevent", remanEvent)
 	// fmt.Println("data :", remanEvent.Data)
 	// fmt.Println("wowowow", remanEvent.Key)
 
 	sh := shell.NewShell("localhost:5001")
-	cid, err := addFile(sh, remanEvent.Data)
+	cid, err := addFile(sh, mutableData.Data)
 	fmt.Println("samuels print cid: ", cid)
-	output, _ := addDataToIPNS(sh, remanEvent.Key, cid)
+	output, _ := addDataToIPNS(sh, mutableData.Key, cid)
 
 	fmt.Println("publised", output)
 

@@ -131,6 +131,27 @@ func uploadAndUpdateCID(intSensitive int, resultM primitive.M, resultD primitive
 	return cid
 }
 
+// Will be used for testing without the CA.
+func testLinkMakes(cid string) string {
+	target := passportFromCID(cid)
+	// var newJson2 map[string]interface{}
+	res := fmt.Sprintf("%v", target["LinkMakes"])
+	return res[1 : len(res)-1]
+}
+
+func generateLinkMakesData(cid string) string {
+	target := passportFromCID(cid)
+	// var newJson2 map[string]interface{}
+	newJson2 := make(map[string]interface{})
+	newJson2["CID"] = cid
+	newJson2["ItemName"] = target["ItemName"]
+	newJson2["Origin"] = target["Origin"]
+	newJson2["CreationDate"] = target["CreationDate"]
+	test, _ := json.Marshal(newJson2)
+	newjson := LinkMakesAdd(string(test))
+	return newjson
+}
+
 func generateQRCode(cid string) {
 	target := passportFromCID(cid)
 

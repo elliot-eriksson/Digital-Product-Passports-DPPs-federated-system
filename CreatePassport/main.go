@@ -64,10 +64,15 @@ func main() {
 		cid = uploadAndUpdateCID(0, resultM2, resultD2, client, database, collection)
 		keyRename(cid)
 		keyRenameLinkMakes(cid, randomName)
-		//generateQRCode(cid)
-		fmt.Println(lmArray)
+		generateQRCode(cid)
+		genLinkMakes := generateLinkMakesData(cid)
+
+		// iterates through the linkmadefrom array (lmArray) and retrieves their respective keys. The key pointers are then updated to show the CID for the recently created product.
 		if len(lmArray) > 0 {
-			LinkMakesPointerUpdate(lmArray, cid)
+			for i := 0; i < len(lmArray); i++ {
+				res := testLinkMakes(lmArray[i])
+				addDataToIPNS(res, genLinkMakes)
+			}
 		}
 	}
 }

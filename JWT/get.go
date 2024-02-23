@@ -10,7 +10,7 @@ import (
 )
 
 func readFile(sh *shell.Shell, cid string) (*string, error) {
-	reader, err := sh.Cat(fmt.Sprintf("/ipfs/%s", cid))
+	reader, err := sh.Cat(cid)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading the file %s", err.Error())
 	}

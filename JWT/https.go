@@ -134,10 +134,39 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 
 }
 
+// func errorHandling(field1 string){
+// 		//Korrekt nyckel
+
+// 	if field1  != nil{
+// 		http.Error(writer, "Error uploading to IPFS", http.StatusInternalServerError)
+
+// 	}
+
+// }
+
 type MutableData struct {
 	Key  string `json: Key`
 	Data string `json: Data`
 }
+
+type MutableData2 struct {
+	Key  string `json: Key`
+	Data string `json: Data`
+	Name string `json: Name`
+	Date string `json: Date`
+}
+
+type newData struct {
+	CID  string `json: CID`
+	Name string `json: Name`
+	Date string `json: Date`
+}
+
+// type newData struct {
+// 	CID  string
+// 	Name string
+// 	Date string
+// }
 
 func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
@@ -166,26 +195,59 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println("Put request failed", err)
 	}
 
-	// //fmt.Println("This is a public key ", key)
-	// key := "/ipns/" + mutableData.Key
-	// output := lsIPNS(key)
-	// content, contentLenght := splitListContent(output)
-	// stringindex := catContent(content, contentLenght)
-	// for output := range stringindex {
-	// 	writer.WriteHeader(http.StatusOK)
-	// 	_, _ = writer.Write([]byte(stringindex[output]))
-	// }
-
-	// fmt.Println("remanevent", remanEvent)
-	// fmt.Println("data :", remanEvent.Data)
-	// fmt.Println("wowowow", remanEvent.Key)
-
 	sh := shell.NewShell("localhost:5001")
 	cid, err := addFile(sh, mutableData.Data)
+
+	var mutableData2 MutableData2
+	sunesfulagrej := make(map[string]interface{})
+	var oldData []newData
+	var newData []newData
+
+	key := "/ipns/" + mutableData.Key
+	outputtest := getPassport(key, "")
+	test, _ := json.Marshal([]byte(outputtest))
+	json.Unmarshal(test, &oldData)
+
+	err = json.Unmarshal(body, &mutableData2)
+	fmt.Println("MUTABLE DATA 2", mutableData2)
+
+	sunesfulagrej["CID"] = cid
+	sunesfulagrej["Name"] = mutableData2.Name
+	//sunesfulagrej["Data"] = mutableData2.Data
+	sunesfulagrej["Date"] = mutableData2.Date
+
+	fmt.Println("sunesfulagrej['CID']: ", sunesfulagrej["CID"])
+	fmt.Println("sunesfulagrej['Name']: ", sunesfulagrej["Name"])
+	// fmt.Println("sunesfulagrej['Data']: ", sunesfulagrej["Data"])
+	fmt.Println("sunesfulagrej['Date']: ", sunesfulagrej["Date"])
+
+	jsonAdd, err := json.Marshal(sunesfulagrej)
+	fmt.Println("NEW DATA Marshal", string(jsonAdd))
+	newString := "[" + string(jsonAdd) + "]"
+	fmt.Println("NEW STRING", newString)
+
+	// fmt.Println("type of jsonAdd %T\n: ", reflect.TypeOf(jsonAdd))
+
+	err = json.Unmarshal([]byte(newString), &newData)
+	if err != nil {
+		fmt.Println("ERROR UNMARSHAL", err)
+	}
+
+	fmt.Println("NEW DATA Unmarshal", newData)
+
+	oldData = append(oldData, newData...)
+
+	// for _, v := range oldData {
+	// 	fmt.Println(v)
+	// }
+	result, err := json.Marshal(oldData)
+	fmt.Println("result: ", string(result))
+
+	cid, err = addFile(sh, string(result))
+
 	fmt.Println("samuels print cid: ", cid)
 	output, _ := addDataToIPNS(sh, mutableData.Key, cid)
-
-	fmt.Println("publised", output)
+	fmt.Println("published", output)
 
 	writer.WriteHeader(http.StatusOK)
 	_, _ = writer.Write([]byte(cid))

@@ -6,11 +6,12 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"strings"
 
 	shell "github.com/ipfs/go-ipfs-api"
 )
 
-type TestClaim struct {
+type tmpStringClaim struct {
 	CID string `json: CID`
 }
 
@@ -24,21 +25,21 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var testClaim TestClaim
+	var tmpStringClaim tmpStringClaim
 	fmt.Println(request.Body)
 
 	// Decode JSON from the request body into the Message struct
-	err := json.NewDecoder(request.Body).Decode(&testClaim)
+	err := json.NewDecoder(request.Body).Decode(&tmpStringClaim)
 	if err != nil {
 		fmt.Println("Get request failed", err)
 		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
 		return
 	}
-	// fmt.Println("--->CID ", testClaim.CID)
+	// fmt.Println("--->CID ", tmpStringClaim.CID)
 
-	if testClaim.CID[0] == 107 { // checks if the first char is k
+	if tmpStringClaim.CID[0] == 107 { // checks if the first char is k
 		//fmt.Println("This is a public key ", key)
-		key := "/ipns/" + testClaim.CID
+		key := "/ipns/" + tmpStringClaim.CID
 		output := getPassport(key, keyD)
 		content, contentLenght := splitListContent(output)
 		stringindex := catContent(content, contentLenght)
@@ -47,9 +48,9 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 			_, _ = writer.Write([]byte(stringindex[output]))
 		}
 	}
-	if testClaim.CID[0] == 81 { // checks if the first char is Q
+	if tmpStringClaim.CID[0] == 81 { // checks if the first char is Q
 		//fmt.Println("This is a CID ", key)
-		CID := "/ipfs/" + testClaim.CID
+		CID := "/ipfs/" + tmpStringClaim.CID
 		Dpp := getPassport(CID, keyD)
 		if err != nil {
 			fmt.Println("Wrong CID", err)
@@ -144,29 +145,38 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 
 // }
 
-type MutableData struct {
-	Key  string `json: Key`
-	Data string `json: Data`
-}
-
-type MutableData2 struct {
-	Key  string `json: Key`
-	Data string `json: Data`
-	Name string `json: Name`
-	Date string `json: Date`
-}
-
-type newData struct {
-	CID  string `json: CID`
-	Name string `json: Name`
-	Date string `json: Date`
-}
-
-// type newData struct {
-// 	CID  string
-// 	Name string
-// 	Date string
+// type MutableData struct {
+// 	Key  string `json: Key`
+// 	Data string `json: Data`
+// 	Name string `json: Name`
+// 	Date string `json: Date`
 // }
+
+// type MutableDataToUpload struct {
+// 	Data string `json: Data`
+// 	Name string `json: Name`
+// 	Date string `json: Date`
+// }
+
+type httpData struct {
+	Key       string `json: Key`
+	Eventtype string `json: Eventtype`
+	Datetime  string `json: Datetime`
+	Data      string `json: Data`
+}
+
+type ledgerData struct {
+	Eventtype string `json: Eventtype`
+	Data      string `json: Data`
+	Datetime  string `json: Datetime`
+}
+
+type appendEntry struct {
+	CID       string `json: CID`
+	Eventtype string `json: Eventtype`
+	// Name string `json: Name`
+	Datetime string `json: Datetime`
+}
 
 func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
@@ -184,71 +194,173 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var mutableData MutableData
-	fmt.Println(request.Body)
-	fmt.Println("Bodddy", string(body))
+	var MutableData httpData
 
-	// Decode JSON from the request body into the remanEvent struct
-	//err = json.NewDecoder(request.Body).Decode(&remanEvent)
-	err = json.Unmarshal(body, &mutableData)
+	err = json.Unmarshal(body, &MutableData)
 	if err != nil {
 		fmt.Println("Put request failed", err)
 	}
 
+	var MutableDataToUpload ledgerData
+	tmpByte, _ := json.Marshal(MutableData)
+	_ = json.Unmarshal(tmpByte, &MutableDataToUpload)
+	uploadData, _ := json.Marshal(MutableDataToUpload)
+
 	sh := shell.NewShell("localhost:5001")
-	cid, err := addFile(sh, mutableData.Data)
-
-	var mutableData2 MutableData2
-	sunesfulagrej := make(map[string]interface{})
-	var oldData []newData
-	var newData []newData
-
-	key := "/ipns/" + mutableData.Key
-	outputtest := getPassport(key, "")
-	test, _ := json.Marshal([]byte(outputtest))
-	json.Unmarshal(test, &oldData)
-
-	err = json.Unmarshal(body, &mutableData2)
-	fmt.Println("MUTABLE DATA 2", mutableData2)
-
-	sunesfulagrej["CID"] = cid
-	sunesfulagrej["Name"] = mutableData2.Name
-	//sunesfulagrej["Data"] = mutableData2.Data
-	sunesfulagrej["Date"] = mutableData2.Date
-
-	fmt.Println("sunesfulagrej['CID']: ", sunesfulagrej["CID"])
-	fmt.Println("sunesfulagrej['Name']: ", sunesfulagrej["Name"])
-	// fmt.Println("sunesfulagrej['Data']: ", sunesfulagrej["Data"])
-	fmt.Println("sunesfulagrej['Date']: ", sunesfulagrej["Date"])
-
-	jsonAdd, err := json.Marshal(sunesfulagrej)
-	fmt.Println("NEW DATA Marshal", string(jsonAdd))
-	newString := "[" + string(jsonAdd) + "]"
-	fmt.Println("NEW STRING", newString)
-
-	// fmt.Println("type of jsonAdd %T\n: ", reflect.TypeOf(jsonAdd))
-
-	err = json.Unmarshal([]byte(newString), &newData)
+	cid, err := addFile(sh, string(uploadData))
 	if err != nil {
-		fmt.Println("ERROR UNMARSHAL", err)
+		fmt.Println("Failed to add file to IPNS", err)
 	}
 
-	fmt.Println("NEW DATA Unmarshal", newData)
+	remanEventData := make(map[string]interface{})
+	var record []appendEntry
+	var appendEntry []appendEntry
 
-	oldData = append(oldData, newData...)
+	dataOnIPNS := catRemanContent(MutableData.Key)
 
-	// for _, v := range oldData {
-	// 	fmt.Println(v)
-	// }
-	result, err := json.Marshal(oldData)
-	fmt.Println("result: ", string(result))
+	tmpByte, _ = json.Marshal([]byte(dataOnIPNS))
+	json.Unmarshal(tmpByte, &record)
 
-	cid, err = addFile(sh, string(result))
+	err = json.Unmarshal(body, &MutableData)
+	if err != nil {
+		fmt.Println("Error unmarshaling body, error code: ", err)
+	}
+	remanEventData["CID"] = cid
+	remanEventData["Eventtype"] = MutableData.Eventtype
+	remanEventData["Datetime"] = MutableData.Datetime
 
-	fmt.Println("samuels print cid: ", cid)
-	output, _ := addDataToIPNS(sh, mutableData.Key, cid)
-	fmt.Println("published", output)
+	jsonAdd, err := json.Marshal(remanEventData)
+	if err != nil {
+		fmt.Println("Error unmarshaling jsonAdd, error code: ", err)
+	}
+	newString := "[" + string(jsonAdd) + "]"
+
+	err = json.Unmarshal([]byte(newString), &appendEntry)
+	if err != nil {
+		fmt.Println("Error unmarshaling newString, error code: ", err)
+	}
+
+	record = append(record, appendEntry...)
+	recordJson, err := json.Marshal(record)
+	newRecord := append(recordJson, dataOnIPNS...)
+
+	if err != nil {
+		fmt.Println("Error marshalling record: ", err)
+	}
+
+	newJsonData := strings.Replace(string(newRecord), "[", "", -1)
+	newJsonData = strings.Replace(newJsonData, "]", "", -1)
+	newJsonData = strings.Replace(newJsonData, "}{", "},{", -1)
+	newJsonData = "[" + newJsonData + "]"
+
+	cid, err = addFile(sh, newJsonData)
+	if err != nil {
+		fmt.Println("Error adding file to IPNS: ", err)
+	}
+
+	addDataToIPNS(sh, MutableData.Key, cid)
 
 	writer.WriteHeader(http.StatusOK)
 	_, _ = writer.Write([]byte(cid))
+}
+
+type chooseEvent struct {
+	Key  string `json: Key`
+	Type string `json: Type`
+	CID  string `json: CID`
+
+	// "Key":"k51qzi5uqu5dl8vkvhdrynmw3blxw6r2rx43ui0nhybad5nbvikmq04nd7gzb0", "type" : "last" ,"CID" : "QmVcvZu5N7VRyuarfZ2bAz6KkwdnsaEuQNFD8wdX1xmgJG"
+
+}
+
+type getEvent struct {
+	CID string `json:"CID"`
+	// Name string `json:"Name"`
+	// Date string `json:"Date"`
+	//Data      string `json: Data`
+
+	// "Key":"k51qzi5uqu5dl8vkvhdrynmw3blxw6r2rx43ui0nhybad5nbvikmq04nd7gzb0", "type" : "last" ,"CID" : "QmVcvZu5N7VRyuarfZ2bAz6KkwdnsaEuQNFD8wdX1xmgJG"
+
+}
+
+func retriveLastEvent(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	fmt.Println("REQUEST METHODE", request.Method)
+	//Check that messages is Put
+	if request.Method != http.MethodPut {
+		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	body, err := io.ReadAll(request.Body)
+	if err != nil {
+		fmt.Println("Error reading body", err)
+		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
+		return
+	}
+	var chooseEvent chooseEvent
+	var getEvent []getEvent
+
+	err = json.Unmarshal(body, &chooseEvent)
+	if err != nil {
+		fmt.Println("Put request failed", err)
+		http.Error(writer, "Error not Json valid", http.StatusNotAcceptable)
+		return
+	}
+
+	if chooseEvent.Type == "AllEvent" {
+		remanData := catRemanContent(chooseEvent.Key)
+		fmt.Println("remanData", remanData)
+		err = json.Unmarshal([]byte(remanData), &getEvent)
+		// fmt.Println("getEvent", getEvent.CID)
+		if err != nil {
+			fmt.Println("Error unmarshaling remanData, error code: ", err)
+		}
+		fmt.Println("CID: ", getEvent)
+
+		for i, _ := range getEvent {
+
+			fmt.Sprintf("%v", getEvent[i])
+
+			newJsonData := strings.Replace(fmt.Sprintf("%v", getEvent[i]), "{", "", -1)
+			newJsonData = strings.Replace(newJsonData, "}", "", -1)
+
+			data := getPassport(newJsonData, "")
+			data = data + "\n"
+			fmt.Println("data: ", data)
+			fmt.Println("CID: ", getEvent[i])
+
+			writer.WriteHeader(http.StatusOK)
+			_, _ = writer.Write([]byte(data))
+		}
+
+	} else if chooseEvent.Type == "SpecificEvent" {
+		// if needed
+
+	} else if chooseEvent.Type == "LastEvent" {
+		// 1. hämta event logg
+		// 2. Ta ur data från sista append i event loggbody
+		// 3. return eventtype, date, data
+		remanData := catRemanContent(chooseEvent.Key)
+		//fmt.Println("remanData", remanData)
+		err = json.Unmarshal([]byte(remanData), &getEvent)
+		// fmt.Println("getEvent", getEvent.CID)
+		if err != nil {
+			fmt.Println("Error unmarshaling remanData, error code: ", err)
+		}
+
+		// getLast := getEvent[len(getEvent)-1]
+		getLast := strings.Replace(fmt.Sprintf("%v", getEvent[len(getEvent)-1]), "{", "", -1)
+		getLast = strings.Replace(getLast, "}", "", -1)
+
+		data := getPassport(getLast, "")
+
+		writer.WriteHeader(http.StatusOK)
+		_, _ = writer.Write([]byte(data))
+
+	} else {
+		http.Error(writer, "Error no type selected", http.StatusNotAcceptable)
+		return
+	}
+
 }

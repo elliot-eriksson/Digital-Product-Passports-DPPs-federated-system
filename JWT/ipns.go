@@ -17,6 +17,18 @@ func splitListContent(Content string) ([]string, int) {
 	return temp, lenvar
 }
 
+func catRemanContent(key string) string {
+	// fmt.Println("-->samuelstestnyckel: ", ipnsKeyToCMD(key))
+	cmd := exec.Command("ipfs", "cat", ipnsKeyToCMD(key))
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(output))
+		return string(output)
+	}
+	fmt.Println(string(output))
+	return string(output)
+}
+
 // Printing and retriving the information from an IPNS pointer
 func catContent(CID []string, length int) (contentIndex []string) {
 	var splitIndex []string

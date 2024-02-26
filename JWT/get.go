@@ -32,23 +32,23 @@ func passportFromCID(cid, key string) (target map[string]interface{}) {
 		fmt.Println("Error reading the file:", err.Error())
 		// return ""
 	}
-	fmt.Println("passportFromCID file read", text)
+	// fmt.Println("passportFromCID file read", text)
 	// data := decryptIt([]byte(*text), key)
 	err = json.Unmarshal([]byte(*text), &target)
-	fmt.Println("passportFromCID Unmarsal", target)
+	// fmt.Println("passportFromCID Unmarsal", target)
 	// target["cid"] = cid
 	return target
 }
 
 func getPassport(cid, key string) string {
-	fmt.Println("GetPASSPORT ENTERD")
+	// fmt.Println("GetPASSPORT ENTERD")
 	result := passportFromCID(cid, key)
 	jsonStr, err := json.Marshal(result)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return ""
 	}
-	fmt.Println("JSON STRING \n", string(jsonStr))
+	// fmt.Println("JSON STRING \n", string(jsonStr))
 	return string(jsonStr)
 }
 

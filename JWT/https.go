@@ -283,7 +283,7 @@ type getEvent struct {
 
 }
 
-func retriveLastEvent(writer http.ResponseWriter, request *http.Request) {
+func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	fmt.Println("REQUEST METHODE", request.Method)
 	//Check that messages is Put

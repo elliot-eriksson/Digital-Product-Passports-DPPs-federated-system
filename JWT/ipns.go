@@ -23,9 +23,9 @@ func catRemanContent(key string) string {
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(string(output))
-		return string(output)
+		return ""
 	}
-	fmt.Println(string(output))
+	fmt.Println("in ipns", string(output))
 	return string(output)
 }
 

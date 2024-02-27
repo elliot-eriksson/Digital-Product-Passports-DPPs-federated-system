@@ -11,10 +11,6 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 )
 
-type tmpStringClaim struct {
-	CID string `json: CID`
-}
-
 func getHandler(writer http.ResponseWriter, request *http.Request) {
 	keyD := "hej"
 	writer.Header().Set("Content-Type", "application/json")
@@ -94,10 +90,6 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-type APICheck struct {
-	APIKey string `json: api_key`
-}
-
 func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 
@@ -133,49 +125,6 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	_, _ = writer.Write(response)
 	// _, _ = writer.Write([]byte(cid))
 
-}
-
-// func errorHandling(field1 string){
-// 		//Korrekt nyckel
-
-// 	if field1  != nil{
-// 		http.Error(writer, "Error uploading to IPFS", http.StatusInternalServerError)
-
-// 	}
-
-// }
-
-// type MutableData struct {
-// 	Key  string `json: Key`
-// 	Data string `json: Data`
-// 	Name string `json: Name`
-// 	Date string `json: Date`
-// }
-
-// type MutableDataToUpload struct {
-// 	Data string `json: Data`
-// 	Name string `json: Name`
-// 	Date string `json: Date`
-// }
-
-type httpData struct {
-	Key       string `json: Key`
-	Eventtype string `json: Eventtype`
-	Datetime  string `json: Datetime`
-	Data      string `json: Data`
-}
-
-type ledgerData struct {
-	Eventtype string `json: Eventtype`
-	Data      string `json: Data`
-	Datetime  string `json: Datetime`
-}
-
-type appendEntry struct {
-	CID       string `json: CID`
-	Eventtype string `json: Eventtype`
-	// Name string `json: Name`
-	Datetime string `json: Datetime`
 }
 
 func addMutableData(writer http.ResponseWriter, request *http.Request) {
@@ -217,7 +166,7 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	var appendEntry []appendEntry
 
 	dataOnIPNS := catRemanContent(MutableData.Key)
-
+	fmt.Println("------>NYTT TEST SAMUEL REMANCONTENTCAT:", dataOnIPNS)
 	tmpByte, _ = json.Marshal([]byte(dataOnIPNS))
 	json.Unmarshal(tmpByte, &record)
 
@@ -226,7 +175,7 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println("Error unmarshaling body, error code: ", err)
 	}
 	remanEventData["CID"] = cid
-	remanEventData["Eventtype"] = MutableData.Eventtype
+	remanEventData["EventType"] = MutableData.Eventtype
 	remanEventData["Datetime"] = MutableData.Datetime
 
 	jsonAdd, err := json.Marshal(remanEventData)
@@ -242,7 +191,7 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 
 	record = append(record, appendEntry...)
 	recordJson, err := json.Marshal(record)
-	newRecord := append(recordJson, dataOnIPNS...)
+	newRecord := append([]byte(dataOnIPNS), recordJson...)
 
 	if err != nil {
 		fmt.Println("Error marshalling record: ", err)
@@ -262,25 +211,6 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 
 	writer.WriteHeader(http.StatusOK)
 	_, _ = writer.Write([]byte(cid))
-}
-
-type chooseEvent struct {
-	Key  string `json: Key`
-	Type string `json: Type`
-	CID  string `json: CID`
-
-	// "Key":"k51qzi5uqu5dl8vkvhdrynmw3blxw6r2rx43ui0nhybad5nbvikmq04nd7gzb0", "type" : "last" ,"CID" : "QmVcvZu5N7VRyuarfZ2bAz6KkwdnsaEuQNFD8wdX1xmgJG"
-
-}
-
-type getEvent struct {
-	CID string `json:"CID"`
-	// Name string `json:"Name"`
-	// Date string `json:"Date"`
-	//Data      string `json: Data`
-
-	// "Key":"k51qzi5uqu5dl8vkvhdrynmw3blxw6r2rx43ui0nhybad5nbvikmq04nd7gzb0", "type" : "last" ,"CID" : "QmVcvZu5N7VRyuarfZ2bAz6KkwdnsaEuQNFD8wdX1xmgJG"
-
 }
 
 func retriveEvent(writer http.ResponseWriter, request *http.Request) {
@@ -338,18 +268,12 @@ func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 		// if needed
 
 	} else if chooseEvent.Type == "LastEvent" {
-		// 1. hämta event logg
-		// 2. Ta ur data från sista append i event loggbody
-		// 3. return eventtype, date, data
 		remanData := catRemanContent(chooseEvent.Key)
-		//fmt.Println("remanData", remanData)
 		err = json.Unmarshal([]byte(remanData), &getEvent)
-		// fmt.Println("getEvent", getEvent.CID)
 		if err != nil {
 			fmt.Println("Error unmarshaling remanData, error code: ", err)
 		}
 
-		// getLast := getEvent[len(getEvent)-1]
 		getLast := strings.Replace(fmt.Sprintf("%v", getEvent[len(getEvent)-1]), "{", "", -1)
 		getLast = strings.Replace(getLast, "}", "", -1)
 
@@ -362,5 +286,115 @@ func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, "Error no type selected", http.StatusNotAcceptable)
 		return
 	}
+}
+
+func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	fmt.Println("REQUEST METHODE", request.Method)
+	//Check that messages is Put
+	if request.Method != http.MethodPut {
+		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	body, err := io.ReadAll(request.Body)
+	if err != nil {
+		fmt.Println("Error reading body", err)
+		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
+		return
+	}
+
+	var MutableData httpDataProduct
+
+	err = json.Unmarshal(body, &MutableData)
+	if err != nil {
+		fmt.Println("Put request failed", err)
+	}
+
+	remanEventData := make(map[string]interface{})
+	var record []appendEntryProduct
+	var record2 []appendEntryProduct
+	var appendEntry []appendEntryProduct
+	dataOnIPNS := catRemanContent(MutableData.Key)
+
+	tmpByte, _ := json.Marshal([]byte(dataOnIPNS))
+	err = json.Unmarshal([]byte(dataOnIPNS), &record2)
+
+	fmt.Println("EFTER UNMARSHAL ", record2)
+	json.Unmarshal(tmpByte, &record)
+	found := false
+	fmt.Println("CID TO REPLACEDCED ", MutableData.CIDToReplace)
+	if MutableData.CIDToReplace != "" {
+		for i := 0; i < len(record2); i++ {
+			if record2[i].CID == MutableData.CIDToReplace {
+				fmt.Println("HIttade en matchande CID: ", record2[i].CID)
+				record2[i].CID = MutableData.CID
+				record2[i].Datetime = MutableData.Datetime
+				record2[i].ProductType = MutableData.ProductType
+				fmt.Println("RECORD 2", record2)
+				found = true
+				break
+			}
+		}
+		if !found {
+			fmt.Println("Error CID not found in event log: ", MutableData.CIDToReplace)
+			http.Error(writer, "Error CID not found in event log: ", http.StatusNotFound)
+			return
+		}
+		result, _ := json.Marshal(record2)
+		fmt.Println("RECORD 2 MARSHAL", string(result))
+		sh := shell.NewShell("localhost:5001")
+		cid, _ := addFile(sh, string(result))
+		addDataToIPNS(sh, MutableData.Key, cid)
+
+		writer.WriteHeader(http.StatusOK)
+		_, _ = writer.Write([]byte(cid))
+	} else {
+		err = json.Unmarshal(body, &MutableData)
+		if err != nil {
+			fmt.Println("Error unmarshaling body, error code: ", err)
+		}
+		remanEventData["CID"] = MutableData.CID
+		remanEventData["Datetime"] = MutableData.Datetime
+		remanEventData["ProductType"] = MutableData.ProductType
+
+		jsonAdd, err := json.Marshal(remanEventData)
+		if err != nil {
+			fmt.Println("Error unmarshaling jsonAdd, error code: ", err)
+		}
+		newString := "[" + string(jsonAdd) + "]"
+
+		err = json.Unmarshal([]byte(newString), &appendEntry)
+		if err != nil {
+			fmt.Println("Error unmarshaling newString, error code: ", err)
+		}
+
+		if err != nil {
+			fmt.Println("Error adding file to IPNS: ", err)
+		}
+		fmt.Println("reman event------------->", newString)
+		record = append(record, appendEntry...)
+		recordJson, err := json.Marshal(record)
+		fmt.Println("recordJson event------------->", string(recordJson))
+		newRecord := append([]byte(dataOnIPNS), recordJson...)
+		if err != nil {
+			fmt.Println("Error marshalling record: ", err)
+		}
+
+		record2 := strings.Replace(string(newRecord), "[", "", -1)
+		record2 = strings.Replace(record2, "]", "", -1)
+		record2 = strings.Replace(record2, "}{", "},{", -1)
+		record2 = "[" + record2 + "]"
+		fmt.Println("DATAN SOM BLIR UPPLADDADDD:) \n", record2)
+
+		sh := shell.NewShell("localhost:5001")
+		cid, err := addFile(sh, record2)
+		addDataToIPNS(sh, MutableData.Key, cid)
+
+		writer.WriteHeader(http.StatusOK)
+		_, _ = writer.Write([]byte(cid))
+	}
+
+	//fmt.Println("Result SOM BLIR UPPLADDADDD:) \n", string(result))
 
 }

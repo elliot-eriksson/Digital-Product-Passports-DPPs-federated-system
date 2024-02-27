@@ -11,16 +11,20 @@ func main() {
 
 	getURL := "/retrieveData"
 	// getAllIPNS := "/retrieveAllMutableData"
-	getKey := "/get-publicKey"
+	// getKey := "/get-publicKey"
 	createPassportURL := "/publishPassport"
-	addRemanafactureEventURL := "/addMutableData"
+	addRemanafactureEventURL := "/addEvent"
 	retriveEventURL := "/retriveEvent"
+	addMutableProductURL := "/addMutableProduct"
+	// retriveMutableProductURL := "/retriveMutableProduct"
 
 	http.HandleFunc(getURL, getHandler)
-	http.HandleFunc(getKey, generateKey)
+	// http.HandleFunc(getKey, generateKey)
 	http.HandleFunc(createPassportURL, createPassportHandler)
 	http.HandleFunc(addRemanafactureEventURL, addMutableData)
 	http.HandleFunc(retriveEventURL, retriveEvent)
+	http.HandleFunc(addMutableProductURL, addMutableProduct)
+	// http.HandleFunc(retriveMutableProductURL, retriveMutableProduct)
 
 	// Define a route handler for the "/home" endpoint
 	// http.HandleFunc("/home", handlePage)

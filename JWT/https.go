@@ -84,11 +84,10 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	var passport interface{}
 	var dataToCA dataToCA
 	err = json.Unmarshal(body, &passport)
-
 	passportData, _ := passport.(map[string]interface{})
-	if passportData["type"] == "complete" {
-		fmt.Println("TYPE  ", passportData["type"])
-		delete(passportData, "type")
+	passType := passportData["type"]
+	delete(passportData, "type")
+	if passType == "complete" {
 
 		pubKey, privKey := generateKey()
 		passportData["remanufacturing_events"] = pubKey
@@ -107,60 +106,56 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 		dataToCA.Made_from.Privatekey = privKey
 		dataToCA.Made_from.Publickey = pubKey
 
-	} else if passportData["type"] == "simple" {
-		fmt.Println("TYPE  ", passportData["type"])
-		delete(passportData, "type")
+	} else if passType == "simple" {
+
 	} else {
+		fmt.Println("No valid type sent")
+		http.Error(writer, "No valid type sent", http.StatusInternalServerError)
 		return
 	}
 	err = json.Unmarshal(body, &passport)
 	output, err := json.Marshal(passportData)
-	// output, err := json.Marshal(i)
 	fmt.Println("JSON STRING", string(output))
 
 	sh := shell.NewShell("localhost:5001")
-
 	cid, err := addFile(sh, string(output))
-
-	dataToCA.Cid = cid
-	test, _ := json.Marshal(dataToCA)
-	newString := strings.Replace(string(test), "Privatekey", "privatekey", -1)
-	newString = strings.Replace(newString, "Publickey", "publickey", -1)
-	newString = strings.Replace(newString, "Cid", "cid", -1)
-	newString = strings.Replace(newString, "Remanufacturing_events", "remanufacturing_events", -1)
-	newString = strings.Replace(newString, "Shipping", "shipping", -1)
-	newString = strings.Replace(newString, "Makes", "makes", -1)
-	newString = strings.Replace(newString, "Made_from", "made_from", -1)
-
-	fmt.Println("Det vi ska skicka till andra borde funka men gör inte det .....", string(test))
-	fmt.Println("Det vi ska skicka till andra efter replace fuckery", newString)
-
-	// dataToCA["privatekey"] = keyData.privatekey
-	// dataToCA["publickey"] = keyData.publickey
-
 	if err != nil {
 		fmt.Println("Error uploading to IPFS", err)
 		http.Error(writer, "Error uploading to IPFS", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("cid----", cid)
+	fmt.Println("cid uploaded", cid)
 
-	req, err := http.NewRequest("POST", "https://d0020e-project-dpp.vercel.app/api/v1/CA", bytes.NewBuffer([]byte(newString)))
+	if passType == "complete" {
+		dataToCA.Cid = cid
+		test, _ := json.Marshal(dataToCA)
+		newString := strings.Replace(string(test), "Privatekey", "privatekey", -1)
+		newString = strings.Replace(newString, "Publickey", "publickey", -1)
+		newString = strings.Replace(newString, "Cid", "cid", -1)
+		newString = strings.Replace(newString, "Remanufacturing_events", "remanufacturing_events", -1)
+		newString = strings.Replace(newString, "Shipping", "shipping", -1)
+		newString = strings.Replace(newString, "Makes", "makes", -1)
+		newString = strings.Replace(newString, "Made_from", "made_from", -1)
 
-	// req, err := http.NewRequest("POST", "http://localhost:80/test", bytes.NewBuffer([]byte(newString)))
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	defer resp.Body.Close()
-	responseBody, err := io.ReadAll(resp.Body)
-	fmt.Println("Response from CA: ", string(responseBody))
+		req, err := http.NewRequest("POST", "https://d0020e-project-dpp.vercel.app/api/v1/CA", bytes.NewBuffer([]byte(newString)))
 
+		if err != nil {
+			fmt.Println("Error sending keys to CA", err)
+			http.Error(writer, "Error sending keys to CA", http.StatusInternalServerError)
+			return
+		}
+		// req, err := http.NewRequest("POST", "http://localhost:80/test", bytes.NewBuffer([]byte(newString)))
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		defer resp.Body.Close()
+		responseBody, err := io.ReadAll(resp.Body)
+		fmt.Println("Response from CA: ", string(responseBody))
+	}
 	response, err := json.Marshal(cid)
 
 	writer.WriteHeader(http.StatusOK)
 	_, _ = writer.Write(response)
-	// _, _ = writer.Write([]byte(cid))
-
 }
 
 func test(writer http.ResponseWriter, request *http.Request) {

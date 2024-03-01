@@ -72,10 +72,10 @@ type QrCode struct {
 	Dimensions             string `json: Dimensions`
 	Plant                  string `json: Plant`
 	Entrydate              string `json: Entrydate`
-	remanufacturing_events string `json: remanufacturing_events`
-	shipping               string `json: shipping`
-	makes                  string `json: makes`
-	made_from              string `json: made_from`
+	Remanufacturing_events string `json: remanufacturing_events`
+	Shipping               string `json: shipping`
+	Makes                  string `json: makes`
+	Made_from              string `json: made_from`
 }
 
 type QrCodeImage struct {

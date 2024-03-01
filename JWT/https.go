@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -33,18 +34,7 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
 		return
 	}
-	// fmt.Println("--->CID ", tmpStringClaim.CID)
 
-	// if tmpStringClaim.CID[0] == 107 { // checks if the first char is k
-	// 	//fmt.Println("This is a public key ", key)
-	// 	key := "/ipns/" + tmpStringClaim.CID
-	// 	output := getPassport(key, keyD)
-	// 	content, contentLenght := splitListContent(output)
-	// 	stringindex := catContent(content, contentLenght)
-	// 	for output := range stringindex {
-	// 		writer.WriteHeader(http.StatusOK)
-	// 		_, _ = writer.Write([]byte(stringindex[output]))
-	// 	}
 	// }
 	if tmpStringClaim.CID[0] == 81 { // checks if the first char is Q
 		//fmt.Println("This is a CID ", key)
@@ -62,25 +52,6 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 }
-
-// func generateKey(writer http.ResponseWriter, request *http.Request) {
-
-// 	if request.Method != http.MethodGet {
-// 		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
-// 		return
-// 	}
-
-// 	randomName := randSeq(10)
-// 	keyname := keyGenerator(randomName)
-// 	keyRename(randomName, keyname)
-// 	// response, err := json.Marshal([]byte(keyname))
-// 	// if err != nil {
-// 	// 	fmt.Println("", err)
-// 	// 	return
-// 	// }
-// 	writer.WriteHeader(http.StatusOK)
-// 	_, _ = writer.Write([]byte(keyname))
-// }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
@@ -112,7 +83,6 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 
 	var passport interface{}
 	var dataToCA dataToCA
-	var keyData keyData
 	err = json.Unmarshal(body, &passport)
 
 	passportData, _ := passport.(map[string]interface{})
@@ -121,13 +91,21 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 		delete(passportData, "type")
 
 		pubKey, privKey := generateKey()
-		fmt.Println(pubKey, privKey)
-		// passportData["remanufacturing_events"] = keyName
-		// dataToCA.remanufacturing_events.privatekey = passportData["remanufacturing_events"]
-		// dataToCA.remanufacturing_events.publickey = keyName
-		// passportData["shipping"] = generateKey()
-		// passportData["makes"] = generateKey()
-		// passportData["made_from"] = generateKey()
+		passportData["remanufacturing_events"] = pubKey
+		dataToCA.Remanufacturing_events.Privatekey = privKey
+		dataToCA.Remanufacturing_events.Publickey = pubKey
+		pubKey, privKey = generateKey()
+		passportData["shipping"] = pubKey
+		dataToCA.Shipping.Privatekey = privKey
+		dataToCA.Shipping.Publickey = pubKey
+		pubKey, privKey = generateKey()
+		passportData["makes"] = pubKey
+		dataToCA.Makes.Privatekey = privKey
+		dataToCA.Makes.Publickey = pubKey
+		pubKey, privKey = generateKey()
+		passportData["made_from"] = pubKey
+		dataToCA.Made_from.Privatekey = privKey
+		dataToCA.Made_from.Publickey = pubKey
 
 	} else if passportData["type"] == "simple" {
 		fmt.Println("TYPE  ", passportData["type"])
@@ -135,7 +113,7 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	} else {
 		return
 	}
-
+	err = json.Unmarshal(body, &passport)
 	output, err := json.Marshal(passportData)
 	// output, err := json.Marshal(i)
 	fmt.Println("JSON STRING", string(output))
@@ -144,9 +122,18 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 
 	cid, err := addFile(sh, string(output))
 
-	dataToCA.cid = cid
-	dataToCA.remanufacturing_events.privatekey = keyData.privatekey
-	dataToCA.remanufacturing_events.publickey = keyData.publickey
+	dataToCA.Cid = cid
+	test, _ := json.Marshal(dataToCA)
+	newString := strings.Replace(string(test), "Privatekey", "privatekey", -1)
+	newString = strings.Replace(newString, "Publickey", "publickey", -1)
+	newString = strings.Replace(newString, "Cid", "cid", -1)
+	newString = strings.Replace(newString, "Remanufacturing_events", "remanufacturing_events", -1)
+	newString = strings.Replace(newString, "Shipping", "shipping", -1)
+	newString = strings.Replace(newString, "Makes", "makes", -1)
+	newString = strings.Replace(newString, "Made_from", "made_from", -1)
+
+	fmt.Println("Det vi ska skicka till andra borde funka men gör inte det .....", string(test))
+	fmt.Println("Det vi ska skicka till andra efter replace fuckery", newString)
 
 	// dataToCA["privatekey"] = keyData.privatekey
 	// dataToCA["publickey"] = keyData.publickey
@@ -158,12 +145,35 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 	fmt.Println("cid----", cid)
 
+	req, err := http.NewRequest("POST", "https://d0020e-project-dpp.vercel.app/api/v1/CA", bytes.NewBuffer([]byte(newString)))
+
+	// req, err := http.NewRequest("POST", "http://localhost:80/test", bytes.NewBuffer([]byte(newString)))
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	responseBody, err := io.ReadAll(resp.Body)
+	fmt.Println("Response from CA: ", string(responseBody))
+
 	response, err := json.Marshal(cid)
 
 	writer.WriteHeader(http.StatusOK)
 	_, _ = writer.Write(response)
 	// _, _ = writer.Write([]byte(cid))
 
+}
+
+func test(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	body, err := io.ReadAll(request.Body)
+	if err != nil {
+		fmt.Println("Error reading body", err)
+		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
+		return
+	}
+	fmt.Println(string(body))
+	writer.WriteHeader(http.StatusOK)
+	_, _ = writer.Write(body)
 }
 
 func addMutableData(writer http.ResponseWriter, request *http.Request) {

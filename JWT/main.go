@@ -19,6 +19,7 @@ func main() {
 	retrieveMutableLogURL := "/retrieveMutableLog"
 	generateQcodeURL := "/getQrCode"
 	// retriveMutableProductURL := "/retriveMutableProduct"
+	testURL := "/test"
 
 	http.HandleFunc(getURL, getHandler)
 	// http.HandleFunc(getKey, generateKey)
@@ -28,6 +29,7 @@ func main() {
 	http.HandleFunc(addMutableProductURL, addMutableProduct)
 	http.HandleFunc(retrieveMutableLogURL, retrieveMutableLog)
 	http.HandleFunc(generateQcodeURL, generateQrCode)
+	http.HandleFunc(testURL, test)
 	// http.HandleFunc(retriveMutableProductURL, retriveMutableProduct)
 
 	// Define a route handler for the "/home" endpoint

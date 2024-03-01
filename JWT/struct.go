@@ -91,14 +91,14 @@ type MutableLog struct {
 
 // ----------------- KeyPAIR request api check struct -----------------------
 type keyData struct {
-	privatekey string `json: privatekey`
-	publickey  string `json: publickey`
+	Privatekey string `json: "privatekey"`
+	Publickey  string `json: "publickey"`
 }
 
 type dataToCA struct {
-	cid                    string  `json: cid`
-	remanufacturing_events keyData `json: remanufacturing_events`
-	shipping               keyData `json: shipping`
-	makes                  keyData `json: makes`
-	made_from              keyData `json: made_from`
+	Cid                    string  `json: "cid"`
+	Remanufacturing_events keyData `json: "remanufacturing_events"`
+	Shipping               keyData `json: "shipping"`
+	Makes                  keyData `json: "makes"`
+	Made_from              keyData `json: "made_from"`
 }

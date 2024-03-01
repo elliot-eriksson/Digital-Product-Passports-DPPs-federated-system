@@ -63,24 +63,24 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 
 }
 
-func generateKey(writer http.ResponseWriter, request *http.Request) {
+// func generateKey(writer http.ResponseWriter, request *http.Request) {
 
-	if request.Method != http.MethodGet {
-		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
+// 	if request.Method != http.MethodGet {
+// 		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
+// 		return
+// 	}
 
-	randomName := randSeq(10)
-	keyname := keyGenerator(randomName)
-	keyRename(randomName, keyname)
-	// response, err := json.Marshal([]byte(keyname))
-	// if err != nil {
-	// 	fmt.Println("", err)
-	// 	return
-	// }
-	writer.WriteHeader(http.StatusOK)
-	_, _ = writer.Write([]byte(keyname))
-}
+// 	randomName := randSeq(10)
+// 	keyname := keyGenerator(randomName)
+// 	keyRename(randomName, keyname)
+// 	// response, err := json.Marshal([]byte(keyname))
+// 	// if err != nil {
+// 	// 	fmt.Println("", err)
+// 	// 	return
+// 	// }
+// 	writer.WriteHeader(http.StatusOK)
+// 	_, _ = writer.Write([]byte(keyname))
+// }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
@@ -110,10 +110,47 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 
 	//var apiCheck APICheck
 
-	fmt.Println("Body", string(body))
+	var passport interface{}
+	var dataToCA dataToCA
+	var keyData keyData
+	err = json.Unmarshal(body, &passport)
+
+	passportData, _ := passport.(map[string]interface{})
+	if passportData["type"] == "complete" {
+		fmt.Println("TYPE  ", passportData["type"])
+		delete(passportData, "type")
+
+		pubKey, privKey := generateKey()
+		fmt.Println(pubKey, privKey)
+		// passportData["remanufacturing_events"] = keyName
+		// dataToCA.remanufacturing_events.privatekey = passportData["remanufacturing_events"]
+		// dataToCA.remanufacturing_events.publickey = keyName
+		// passportData["shipping"] = generateKey()
+		// passportData["makes"] = generateKey()
+		// passportData["made_from"] = generateKey()
+
+	} else if passportData["type"] == "simple" {
+		fmt.Println("TYPE  ", passportData["type"])
+		delete(passportData, "type")
+	} else {
+		return
+	}
+
+	output, err := json.Marshal(passportData)
+	// output, err := json.Marshal(i)
+	fmt.Println("JSON STRING", string(output))
+
 	sh := shell.NewShell("localhost:5001")
 
-	cid, err := addFile(sh, string(body))
+	cid, err := addFile(sh, string(output))
+
+	dataToCA.cid = cid
+	dataToCA.remanufacturing_events.privatekey = keyData.privatekey
+	dataToCA.remanufacturing_events.publickey = keyData.publickey
+
+	// dataToCA["privatekey"] = keyData.privatekey
+	// dataToCA["publickey"] = keyData.publickey
+
 	if err != nil {
 		fmt.Println("Error uploading to IPFS", err)
 		http.Error(writer, "Error uploading to IPFS", http.StatusInternalServerError)

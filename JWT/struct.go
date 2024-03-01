@@ -88,3 +88,17 @@ type QrCodeImage struct {
 type MutableLog struct {
 	Key string `json: Key`
 }
+
+// ----------------- KeyPAIR request api check struct -----------------------
+type keyData struct {
+	privatekey string `json: privatekey`
+	publickey  string `json: publickey`
+}
+
+type dataToCA struct {
+	cid                    string  `json: cid`
+	remanufacturing_events keyData `json: remanufacturing_events`
+	shipping               keyData `json: shipping`
+	makes                  keyData `json: makes`
+	made_from              keyData `json: made_from`
+}

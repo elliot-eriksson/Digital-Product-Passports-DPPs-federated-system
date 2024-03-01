@@ -20,6 +20,7 @@ func splitListContent(Content string) ([]string, int) {
 func catRemanContent(key string) string {
 	// fmt.Println("-->samuelstestnyckel: ", ipnsKeyToCMD(key))
 	cmd := exec.Command("ipfs", "cat", ipnsKeyToCMD(key))
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(string(output))
@@ -94,7 +95,7 @@ func keyRename(oldAlias, newAlias string) {
 		fmt.Println(string(output))
 		return
 	}
-	fmt.Println(string(output))
+	// fmt.Println(string(output))
 	return
 }
 

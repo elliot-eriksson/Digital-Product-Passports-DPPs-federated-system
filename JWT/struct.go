@@ -61,3 +61,30 @@ type appendEntryProduct struct {
 type APICheck struct {
 	APIKey string `json: api_key`
 }
+
+// ----------------- Generate QR Code struct ----------------------
+
+type QrCode struct {
+	CID                    string `json: CID`
+	Data                   string `json: Data`
+	MaterialId             string `json: MaterialId`
+	OrderId                string `json: OrderId`
+	Dimensions             string `json: Dimensions`
+	Plant                  string `json: Plant`
+	Entrydate              string `json: Entrydate`
+	remanufacturing_events string `json: remanufacturing_events`
+	shipping               string `json: shipping`
+	makes                  string `json: makes`
+	made_from              string `json: made_from`
+}
+
+type QrCodeImage struct {
+	Filename string `json: Filename`
+	Content  string `json: Content`
+}
+
+// ----------------- retriveMutableLog api check struct -----------------------
+
+type MutableLog struct {
+	Key string `json: Key`
+}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,10 +10,11 @@ import (
 	"strings"
 
 	shell "github.com/ipfs/go-ipfs-api"
+	qrcode "github.com/skip2/go-qrcode"
 )
 
 func getHandler(writer http.ResponseWriter, request *http.Request) {
-	keyD := "hej"
+	// keyD := "hej"
 	writer.Header().Set("Content-Type", "application/json")
 	// var response []byte
 	//Check that messages is GET
@@ -33,21 +35,21 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 	// fmt.Println("--->CID ", tmpStringClaim.CID)
 
-	if tmpStringClaim.CID[0] == 107 { // checks if the first char is k
-		//fmt.Println("This is a public key ", key)
-		key := "/ipns/" + tmpStringClaim.CID
-		output := getPassport(key, keyD)
-		content, contentLenght := splitListContent(output)
-		stringindex := catContent(content, contentLenght)
-		for output := range stringindex {
-			writer.WriteHeader(http.StatusOK)
-			_, _ = writer.Write([]byte(stringindex[output]))
-		}
-	}
+	// if tmpStringClaim.CID[0] == 107 { // checks if the first char is k
+	// 	//fmt.Println("This is a public key ", key)
+	// 	key := "/ipns/" + tmpStringClaim.CID
+	// 	output := getPassport(key, keyD)
+	// 	content, contentLenght := splitListContent(output)
+	// 	stringindex := catContent(content, contentLenght)
+	// 	for output := range stringindex {
+	// 		writer.WriteHeader(http.StatusOK)
+	// 		_, _ = writer.Write([]byte(stringindex[output]))
+	// 	}
+	// }
 	if tmpStringClaim.CID[0] == 81 { // checks if the first char is Q
 		//fmt.Println("This is a CID ", key)
 		CID := "/ipfs/" + tmpStringClaim.CID
-		Dpp := getPassport(CID, keyD)
+		Dpp := getPassport(CID, "")
 		if err != nil {
 			fmt.Println("Wrong CID", err)
 			return
@@ -394,7 +396,87 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusOK)
 		_, _ = writer.Write([]byte(cid))
 	}
+}
 
-	//fmt.Println("Result SOM BLIR UPPLADDADDD:) \n", string(result))
+func retrieveMutableLog(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	fmt.Println("REQUEST METHODE", request.Method)
+	//Check that messages is Put
+	if request.Method != http.MethodGet {
+		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	body, err := io.ReadAll(request.Body)
+	if err != nil {
+		fmt.Println("Error reading body", err)
+		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
+		return
+	}
+
+	var MutableLog MutableLog
+
+	err = json.Unmarshal(body, &MutableLog)
+	if err != nil {
+		fmt.Println("Put request failed", err)
+	}
+
+	log := catRemanContent(MutableLog.Key)
+
+	writer.WriteHeader(http.StatusOK)
+	_, _ = writer.Write([]byte(log))
 
 }
+
+func generateQrCode(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+
+	//Check that messages is GET
+	if request.Method != http.MethodGet {
+		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	body, err := io.ReadAll(request.Body)
+	if err != nil {
+		fmt.Println("Error reading body", err)
+		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
+		return
+	}
+	// fmt.Println(body)
+
+	var tmpStringClaim tmpStringClaim
+
+	// Decode JSON from the request body into the Message struct
+	err = json.Unmarshal(body, &tmpStringClaim)
+	CID := "/ipfs/" + tmpStringClaim.CID
+
+	fmt.Println("CID BEFORE GET", CID)
+	Dpp := getPassport(CID, "")
+	// jsonstr, err := json.Marshal(Dpp)
+	fmt.Println(Dpp)
+
+	var QrCode QrCode
+	var QrCodeImage QrCodeImage
+	QrCode.CID = tmpStringClaim.CID
+	json.Unmarshal([]byte(Dpp), &QrCode)
+	fmt.Println("------------>", QrCode)
+	qrString, err := json.Marshal(QrCode)
+	fmt.Println("QR CODE STRING", string(qrString))
+
+	// var png []byte
+	png, err := qrcode.Encode(string(qrString), qrcode.Medium, 256)
+	fmt.Println("png i guess", string(png))
+	fmt.Println("png i guess byte", png)
+	base64Encoded := base64.StdEncoding.EncodeToString(png)
+	fmt.Println("base64 image ", base64Encoded)
+
+	QrCodeImage.Filename = tmpStringClaim.CID
+	QrCodeImage.Content = base64Encoded
+	marshalQRImg, err := json.Marshal(QrCodeImage)
+
+	writer.WriteHeader(http.StatusOK)
+	_, _ = writer.Write(marshalQRImg)
+}
+
+//fmt.Println("Result SOM BLIR UPPLADDADDD:) \n", string(result))

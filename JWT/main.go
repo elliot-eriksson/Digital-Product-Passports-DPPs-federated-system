@@ -16,6 +16,8 @@ func main() {
 	addRemanafactureEventURL := "/addEvent"
 	retriveEventURL := "/retriveEvent"
 	addMutableProductURL := "/addMutableProduct"
+	retrieveMutableLogURL := "/retrieveMutableLog"
+	generateQcodeURL := "/getQrCode"
 	// retriveMutableProductURL := "/retriveMutableProduct"
 
 	http.HandleFunc(getURL, getHandler)
@@ -24,6 +26,8 @@ func main() {
 	http.HandleFunc(addRemanafactureEventURL, addMutableData)
 	http.HandleFunc(retriveEventURL, retriveEvent)
 	http.HandleFunc(addMutableProductURL, addMutableProduct)
+	http.HandleFunc(retrieveMutableLogURL, retrieveMutableLog)
+	http.HandleFunc(generateQcodeURL, generateQrCode)
 	// http.HandleFunc(retriveMutableProductURL, retriveMutableProduct)
 
 	// Define a route handler for the "/home" endpoint

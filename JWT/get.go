@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -92,21 +91,6 @@ func generateKey() (publicKey, privatekey string) {
 		return
 	}
 
-	fmt.Println("Command output:", string(output))
-	fmt.Println("Key exported successfully.")
-
-	// keynamePriv := "-o .\\PrivateKeys\\" + publicKey + ".pem"
-	// // cmd := exec.Command("ipfs", "key", "export", publicKey, " --format=pem-pkcs8-cleartext -o "+keynamePriv)
-	// cmd := exec.Command("ipfs", "key", "export", publicKey, keynamePriv)
-
-	// keynamePriv := "-o " + publicKey + ".pem"
-	// // cmd := exec.Command("ipfs", "key", "export", publicKey, " --format=pem-pkcs8-cleartext -o "+keynamePriv)
-	// cmd := exec.Command("ipfs", "key", "export", publicKey, keynamePriv)
-
-	// fmt.Println("cmd                   ", cmd)
-	// output, err := cmd.CombinedOutput()
-	fmt.Println("output efter keygen", string(output))
-	fmt.Println("output efter keygen", err)
 	if err != nil {
 		fmt.Println(string(output))
 		return
@@ -115,27 +99,6 @@ func generateKey() (publicKey, privatekey string) {
 	data, err := os.ReadFile(keynamePriv)
 	fmt.Println("DATA GREJS", string(data))
 	privatekey = string(data)
-
-	file, err := os.Open(keynamePriv)
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return
-	}
-	defer file.Close()
-
-	// Create a scanner to read the file line by line
-	scanner := bufio.NewScanner(file)
-
-	// Initialize an empty string to store file contents
-	var fileContent string
-
-	// Read the file line by line
-	for scanner.Scan() {
-		line := scanner.Text()
-		// Concatenate the line to the fileContent string
-		fileContent += line + "\n"
-	}
-	fmt.Println("fileContent", fileContent)
 
 	return publicKey, privatekey
 }

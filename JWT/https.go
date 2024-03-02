@@ -128,29 +128,10 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 
 	if passType == "complete" {
 		dataToCA.Cid = cid
-		test, _ := json.Marshal(dataToCA)
-		newString := strings.Replace(string(test), "Privatekey", "privatekey", -1)
-		newString = strings.Replace(newString, "Publickey", "publickey", -1)
-		newString = strings.Replace(newString, "Cid", "cid", -1)
-		newString = strings.Replace(newString, "Remanufacturing_events", "remanufacturing_events", -1)
-		newString = strings.Replace(newString, "Shipping", "shipping", -1)
-		newString = strings.Replace(newString, "Makes", "makes", -1)
-		newString = strings.Replace(newString, "Made_from", "made_from", -1)
+		postData, _ := json.Marshal(dataToCA)
 
-		req, err := http.NewRequest("POST", "https://d0020e-project-dpp.vercel.app/api/v1/CA", bytes.NewBuffer([]byte(newString)))
+		sendToCa(postData, "POST")
 
-		if err != nil {
-			fmt.Println("Error sending keys to CA", err)
-			http.Error(writer, "Error sending keys to CA", http.StatusInternalServerError)
-			return
-		}
-		// req, err := http.NewRequest("POST", "http://localhost:80/test", bytes.NewBuffer([]byte(newString)))
-		req.Header.Set("Content-Type", "application/json")
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		defer resp.Body.Close()
-		responseBody, err := io.ReadAll(resp.Body)
-		fmt.Println("Response from CA: ", string(responseBody))
 	}
 	response, err := json.Marshal(cid)
 
@@ -158,6 +139,25 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	_, _ = writer.Write(response)
 }
 
+func sendToCa(body []byte, method string) string {
+	// req, err := http.NewRequest(method, "https://d0020e-project-dpp.vercel.app/api/v1/CA", bytes.NewBuffer(body))
+	req, err := http.NewRequest(method, "http://localhost:80/test", bytes.NewBuffer(body))
+
+	if err != nil {
+		fmt.Println("Error sending keys to CA", err)
+		return ""
+	}
+	// req, err := http.NewRequest("POST", "http://localhost:80/test", bytes.NewBuffer([]byte(newString)))
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	responseBody, err := io.ReadAll(resp.Body)
+	fmt.Println("Response from CA: ", string(responseBody))
+	return string(responseBody)
+}
+
+// used to test new features to be implemented
 func test(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	body, err := io.ReadAll(request.Body)
@@ -166,7 +166,24 @@ func test(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
 		return
 	}
-	fmt.Println(string(body))
+
+	var MutableData MutableLog
+
+	err = json.Unmarshal(body, &MutableData)
+
+	if checkKey(MutableData.Key) {
+		fmt.Println("true")
+	} else {
+		fmt.Println("false")
+		remanEventData := make(map[string]interface{})
+		remanEventData["publicKey"] = MutableData.Key
+		test, err := json.Marshal(remanEventData)
+		if err != nil {
+			fmt.Println("Error unmarshaling jsonAdd, error code: ", err)
+		}
+		fmt.Println("Data till CA", string(test))
+	}
+
 	writer.WriteHeader(http.StatusOK)
 	_, _ = writer.Write(body)
 }
@@ -250,8 +267,21 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		fmt.Println("Error adding file to IPNS: ", err)
 	}
+	if checkKey(MutableData.Key) {
+		addDataToIPNS(sh, MutableData.Key, cid)
+	} else {
+		fmt.Println("false")
+		remanEventData := make(map[string]interface{})
+		remanEventData["publicKey"] = MutableData.Key
+		test, err := json.Marshal(remanEventData)
+		if err != nil {
+			fmt.Println("Error unmarshaling jsonAdd, error code: ", err)
+		}
+		fmt.Println("Data till CA", string(test))
+		// response := sendToCa(test, "GET")
 
-	addDataToIPNS(sh, MutableData.Key, cid)
+		addDataToIPNS(sh, MutableData.Key, cid)
+	}
 
 	writer.WriteHeader(http.StatusOK)
 	_, _ = writer.Write([]byte(cid))

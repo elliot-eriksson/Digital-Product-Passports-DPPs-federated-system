@@ -72,10 +72,10 @@ type QrCode struct {
 	Dimensions             string `json: Dimensions`
 	Plant                  string `json: Plant`
 	Entrydate              string `json: Entrydate`
-	Remanufacturing_events string `json: remanufacturing_events`
-	Shipping               string `json: shipping`
-	Makes                  string `json: makes`
-	Made_from              string `json: made_from`
+	Remanufacturing_events string `json:"remanufacturing_events"`
+	Shipping               string `json:"shipping"`
+	Makes                  string `json:"makes"`
+	Made_from              string `json:"made_from"`
 }
 
 type QrCodeImage struct {
@@ -89,16 +89,22 @@ type MutableLog struct {
 	Key string `json: Key`
 }
 
-// ----------------- KeyPAIR request api check struct -----------------------
+// ----------------- KeyPAIR request api struct -----------------------
 type keyData struct {
-	Privatekey string `json: "privatekey"`
-	Publickey  string `json: "publickey"`
+	Privatekey string `json:"privatekey"`
+	Publickey  string `json:"publickey"`
 }
 
 type dataToCA struct {
-	Cid                    string  `json: "cid"`
-	Remanufacturing_events keyData `json: "remanufacturing_events"`
-	Shipping               keyData `json: "shipping"`
-	Makes                  keyData `json: "makes"`
-	Made_from              keyData `json: "made_from"`
+	Cid                    string  `json:"cid"`
+	Remanufacturing_events keyData `json:"remanufacturing_events"`
+	Shipping               keyData `json:"shipping"`
+	Makes                  keyData `json:"makes"`
+	Made_from              keyData `json:"made_from"`
+}
+
+type dataFromCa struct {
+	PublicKey string `json:"publicKey"`
+	Success   string `json:"success"`
+	Message   string `json:"message"`
 }

@@ -97,8 +97,25 @@ func generateKey() (publicKey, privatekey string) {
 	}
 
 	data, err := os.ReadFile(keynamePriv)
-	fmt.Println("DATA GREJS", string(data))
+	// fmt.Println("DATA GREJS", string(data))
 	privatekey = string(data)
 
 	return publicKey, privatekey
+}
+
+func checkKey(key string) (hasKey bool) {
+	cmd := exec.Command("ipfs", "key", "list")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("Error executing command:", err)
+		fmt.Println("Command output:", string(output))
+		return
+	}
+	s := strings.Split(string(output), "\n")
+	for _, cKey := range s {
+		if key == cKey {
+			return true
+		}
+	}
+	return false
 }

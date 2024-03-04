@@ -32,37 +32,20 @@ func passportFromCID(cid, key string) (target map[string]interface{}) {
 	text, err := readFile(sh, cid)
 	if err != nil {
 		fmt.Println("Error reading the file:", err.Error())
-		// return ""
+		return
 	}
-	// fmt.Println("passportFromCID file read", text)
-	// data := decryptIt([]byte(*text), key)
 	err = json.Unmarshal([]byte(*text), &target)
-	// fmt.Println("passportFromCID Unmarsal", target)
-	// target["cid"] = cid
 	return target
 }
 
 func getPassport(cid, key string) string {
-	// fmt.Println("GetPASSPORT ENTERD")
 	result := passportFromCID(cid, key)
 	jsonStr, err := json.Marshal(result)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return ""
 	}
-	// fmt.Println("JSON STRING \n", string(jsonStr))
 	return string(jsonStr)
-}
-
-func getSensetive(cid, key, keySen string) {
-	result := passportFromCID(cid, key)
-	sensetive := passportFromCID(fmt.Sprintf("%v", result["CID_sen"]), keySen)
-	jsonStr, err := json.Marshal(sensetive)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-	fmt.Println("JSON STRING sensetive \n", string(jsonStr))
 }
 
 func addFile(sh *shell.Shell, text string) (string, error) {
@@ -91,15 +74,8 @@ func generateKey() (publicKey, privatekey string) {
 		return
 	}
 
-	if err != nil {
-		fmt.Println(string(output))
-		return
-	}
-
 	data, err := os.ReadFile(keynamePriv)
-	// fmt.Println("DATA GREJS", string(data))
 	privatekey = string(data)
-
 	return publicKey, privatekey
 }
 
@@ -118,4 +94,37 @@ func checkKey(key string) (hasKey bool) {
 		}
 	}
 	return false
+}
+
+func retrievePrivateKey(publicKey string) (success, message string) {
+	remanEventData := make(map[string]interface{})
+	remanEventData["publicKey"] = publicKey
+	jsonToCA, err := json.Marshal(remanEventData)
+	if err != nil {
+		fmt.Println("Error unmarshaling jsonAdd, error code: ", err)
+	}
+	// fmt.Println("Data till CA", string(test))
+	response := sendToCa(jsonToCA, "GET")
+
+	var dataFromCa dataFromCa
+	// fmt.Println("Responsen", response)
+	json.Unmarshal([]byte(response), &dataFromCa)
+	if dataFromCa.Success == "true" {
+		filePath := ".\\PrivateKeys\\" + publicKey + ".pem"
+		// fmt.Println("data from CA NY:", dataFromCa.PrivateKey)
+		err := os.WriteFile(filePath, []byte(dataFromCa.PrivateKey), 0644)
+		if err != nil {
+			fmt.Println("Error writing to file, error code: ", err)
+		}
+		// fmt.Println("file wirthe")
+		message, err := importPEM(publicKey, filePath)
+		// fmt.Println("message:", message)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return "false", message
+		}
+		return "true", message
+	} else {
+		return "false", dataFromCa.Message
+	}
 }

@@ -57,11 +57,6 @@ type appendEntryProduct struct {
 	Datetime    string `json: Datetime`
 }
 
-// ----------------- createPassportHandler api check struct ----------------------
-type APICheck struct {
-	APIKey string `json: api_key`
-}
-
 // ----------------- Generate QR Code struct ----------------------
 
 type QrCode struct {
@@ -104,7 +99,7 @@ type dataToCA struct {
 }
 
 type dataFromCa struct {
-	PublicKey string `json:"publicKey"`
-	Success   string `json:"success"`
-	Message   string `json:"message"`
+	PrivateKey string `json:"privateKey"`
+	Success    string `json:"success"`
+	Message    string `json:"message"`
 }

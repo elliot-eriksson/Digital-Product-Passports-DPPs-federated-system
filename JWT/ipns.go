@@ -8,25 +8,28 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 )
 
+func importPEM(publicKey, filePath string) (string, error) {
+	cmd := exec.Command("ipfs", "key", "import", publicKey, "-f", "pem-pkcs8-cleartext", filePath)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(output), err
+	}
+	return string(output), err
+}
+
 // Splitting the different files into their own string.
 func splitListContent(Content string) ([]string, int) {
 	temp := strings.Split(Content, "\n")
 	lenvar := len(temp) - 1
-	//fmt.Println("your splitted CIDs are: ", temp)
-	//fmt.Println("you have ", lenvar, " different CIDs in this directory")
 	return temp, lenvar
 }
 
 func catRemanContent(key string) string {
-	// fmt.Println("-->samuelstestnyckel: ", ipnsKeyToCMD(key))
 	cmd := exec.Command("ipfs", "cat", ipnsKeyToCMD(key))
-
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Println(string(output))
 		return ""
 	}
-	fmt.Println("in ipns", string(output))
 	return string(output)
 }
 
@@ -35,16 +38,12 @@ func catContent(CID []string, length int) (contentIndex []string) {
 	var splitIndex []string
 	var appendvalue string
 	// Trims unnecessary spaces and content from the CID-array
-	//print(CID)
 	for i := 0; i < length; i++ {
 		splitIndex = append(splitIndex, strings.Split(string(CID[i]), " ")...)
 	}
-	fmt.Println("--------->", splitIndex, " och längden av splitIndex är: ", len(splitIndex))
 	// Splits the array to be able to print out the CID content
-
 	if len(splitIndex) >= 2 {
 		for i := 0; i < len(splitIndex); i += 3 {
-			fmt.Println("File", splitIndex[i+2], " has CID :", splitIndex[i])
 			cmd := exec.Command("ipfs", "cat", splitIndex[i])
 			output, err := cmd.CombinedOutput()
 			appendvalue = string(output)
@@ -54,7 +53,6 @@ func catContent(CID []string, length int) (contentIndex []string) {
 				fmt.Println(string(output))
 				return
 			}
-			fmt.Println("The content of the file", splitIndex[i+2], "is:", string(output))
 		}
 	}
 	return contentIndex
@@ -63,9 +61,6 @@ func catContent(CID []string, length int) (contentIndex []string) {
 // Helper function to find out if its and directory or just an file.
 // Also retrieves the pointer data
 func lsIPNS(key string) string {
-	//simple check for if the sent link is an directory or a CID.
-	//tempkey := key
-
 	cmd := exec.Command("ipfs", "ls", key)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -95,7 +90,6 @@ func keyRename(oldAlias, newAlias string) {
 		fmt.Println(string(output))
 		return
 	}
-	// fmt.Println(string(output))
 	return
 }
 
@@ -107,7 +101,6 @@ func resolveKeyPointer(sh *shell.Shell, key string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve public key %v, output: %s", err, output)
 	}
-	fmt.Println(string(output))
 	return string(output), nil
 }
 
@@ -120,14 +113,12 @@ func ipnsKeyToCMD(key string) string {
 // Converts a public key to a string usable in the terminal
 func hashToCMD(key string) string {
 	key = "--key=" + key
-	fmt.Println(key)
 	return key
 }
 
 // Converts the IPFS CID to a string usable in the terminal
 func cidToCMD(cid string) string {
 	cid = "/ipfs/" + cid
-	fmt.Println(cid)
 	return cid
 }
 

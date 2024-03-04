@@ -204,6 +204,7 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	var MutableData httpData
 
 	err = json.Unmarshal(body, &MutableData)
+	fmt.Println("After first unmarshal", MutableData.Key)
 	if err != nil {
 		fmt.Println("Put request failed", err)
 	}
@@ -261,9 +262,11 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	newJsonData = "[" + newJsonData + "]"
 
 	cid, err = addFile(sh, newJsonData)
+	fmt.Println("CID before key check", cid)
 	if err != nil {
 		fmt.Println("Error adding file to IPNS: ", err)
 	}
+	fmt.Println("Before checkKey", MutableData.Key)
 	if checkKey(MutableData.Key) {
 		addDataToIPNS(sh, MutableData.Key, cid)
 		writer.WriteHeader(http.StatusOK)
@@ -290,8 +293,8 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	fmt.Println("REQUEST METHODE", request.Method)
-	//Check that messages is Post
-	if request.Method != http.MethodPost {
+	//Check that messages is Get
+	if request.Method != http.MethodGet {
 		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
@@ -342,6 +345,7 @@ func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 
 	} else if chooseEvent.Type == "LastEvent" {
 		remanData := catRemanContent(chooseEvent.Key)
+		fmt.Println("remanData", remanData)
 		err = json.Unmarshal([]byte(remanData), &getEvent)
 		if err != nil {
 			fmt.Println("Error unmarshaling remanData, error code: ", err)

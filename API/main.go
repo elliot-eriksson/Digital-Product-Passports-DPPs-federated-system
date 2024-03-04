@@ -16,6 +16,8 @@ func main() {
 	addMutableProductURL := "/addMutableProduct"
 	retrieveMutableLogURL := "/retrieveMutableLog"
 	generateQcodeURL := "/getQrCode"
+	testUTL := "/test"
+	http.HandleFunc(testUTL, test)
 
 	http.HandleFunc(getURL, getHandler)
 	http.HandleFunc(createPassportURL, createPassportHandler)

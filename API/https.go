@@ -51,6 +51,27 @@ func randSeq(n int) string {
 	return string(b)
 }
 
+func test(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	var passport interface{}
+	body, err := io.ReadAll(request.Body)
+	if err != nil {
+		fmt.Println("Error reading body", err)
+		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
+		return
+	}
+	err = json.Unmarshal(body, &passport)
+	passportData, _ := passport.(map[string]interface{})
+	madeby := passportData["Made_by"]
+	delete(passportData, "Made_by")
+	fmt.Println("made_bay", madeby)
+
+	if madeby != "" {
+		str := fmt.Sprintf("%v", madeby)
+		fmt.Println("EFTER IF", str)
+	}
+}
+
 func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 
@@ -76,8 +97,8 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	passportData, _ := passport.(map[string]interface{})
-	passType := passportData["type"]
-	delete(passportData, "type")
+	passType := passportData["Type"]
+	delete(passportData, "Type")
 	if passType == "complete" {
 
 		pubKey, privKey := generateKey()
@@ -109,7 +130,9 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 	err = json.Unmarshal(body, &passport)
 	output, err := json.Marshal(passportData)
-	fmt.Println("JSON STRING", string(output))
+
+	madeby := passportData["Made_by"]
+	delete(passportData, "Made_by")
 
 	sh := shell.NewShell("localhost:5001")
 	cid, err := addFile(sh, string(output))
@@ -118,13 +141,29 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, "Error uploading to IPFS", http.StatusInternalServerError)
 		return
 	}
+
 	if passType == "complete" {
 		dataToCA.Cid = cid
 		postData, _ := json.Marshal(dataToCA)
 		sendToCa(postData, "POST")
 	}
-	response, err := json.Marshal(cid)
 
+	if madeby != "" {
+		madeByString := fmt.Sprintf("%v", madeby)
+		cid, err := addFile(sh, madeByString)
+		if err != nil {
+			fmt.Println("Error uploading to IPFS", err)
+			http.Error(writer, "Error uploading made_by to IPFS", http.StatusInternalServerError)
+			return
+		}
+		addDataToIPNS(sh, dataToCA.Remanufacturing_events.Privatekey, cid)
+	}
+	response, err := json.Marshal(cid)
+	if err != nil {
+		fmt.Println("Error uploading to IPFS", err)
+		http.Error(writer, "Error uploading to IPFS", http.StatusInternalServerError)
+		return
+	}
 	writer.WriteHeader(http.StatusOK)
 	_, _ = writer.Write(response)
 }

@@ -8,6 +8,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"reflect"
 	"strings"
 
 	shell "github.com/ipfs/go-ipfs-api"
@@ -145,10 +146,13 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	if passType == "complete" {
 		dataToCA.Cid = cid
 		postData, _ := json.Marshal(dataToCA)
+		fmt.Println("dataToCA", string(postData))
 		sendToCa(postData, "POST")
 	}
-
-	if madeby != "" {
+	fmt.Println("madeby string grej")
+	fmt.Println("madeby type:", reflect.TypeOf(madeby))
+	if reflect.TypeOf(madeby) != nil {
+		fmt.Println("borde inte vara här..")
 		madeByString := fmt.Sprintf("%v", madeby)
 		cid, err := addFile(sh, madeByString)
 		if err != nil {
@@ -169,7 +173,18 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func sendToCa(body []byte, method string) string {
-	req, err := http.NewRequest(method, "https://d0020e-project-dpp.vercel.app/api/v1/CA", bytes.NewBuffer(body))
+	fmt.Println("JSON SENT TO CA \n", string(body))
+	var address string
+	if method == "GET" {
+		var addressToCA addressToCA
+		json.Unmarshal(body, &addressToCA)
+		fmt.Println(addressToCA.PublicKey)
+		address = "https://d0020e-project-dpp.vercel.app/api/v1/CA/" + addressToCA.PublicKey
+	} else {
+		address = "https://d0020e-project-dpp.vercel.app/api/v1/CA"
+	}
+	req, err := http.NewRequest(method, address, bytes.NewBuffer(body))
+
 	// req, err := http.NewRequest(method, "http://localhost:80/test", bytes.NewBuffer(body))
 
 	if err != nil {
@@ -178,10 +193,19 @@ func sendToCa(body []byte, method string) string {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
+	fmt.Println("requesten", req)
 	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error Do", err)
+		return ""
+	}
 	defer resp.Body.Close()
 	responseBody, err := io.ReadAll(resp.Body)
-	// fmt.Println("Response from CA: ", string(responseBody))
+	if err != nil {
+		fmt.Println("Error readall", err)
+		return ""
+	}
+	fmt.Println("Response from CA: ", string(responseBody))
 	return string(responseBody)
 }
 
@@ -267,13 +291,16 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println("Error adding file to IPNS: ", err)
 	}
 	fmt.Println("Before checkKey", MutableData.Key)
-	if checkKey(MutableData.Key) {
+	if !checkKey(MutableData.Key) {
 		addDataToIPNS(sh, MutableData.Key, cid)
 		writer.WriteHeader(http.StatusOK)
 		statusText := "Data added"
 		_, _ = writer.Write([]byte(statusText))
 	} else {
 		success, message := retrievePrivateKey(MutableData.Key)
+		fmt.Println("Success", success)
+		fmt.Println("Successmessage", message)
+
 		if success == "true" {
 			addDataToIPNS(sh, MutableData.Key, cid)
 			writer.WriteHeader(http.StatusOK)

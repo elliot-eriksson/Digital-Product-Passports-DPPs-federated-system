@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	shell "github.com/ipfs/go-ipfs-api"
@@ -103,22 +104,28 @@ func retrievePrivateKey(publicKey string) (success, message string) {
 	if err != nil {
 		fmt.Println("Error unmarshaling jsonAdd, error code: ", err)
 	}
-	// fmt.Println("Data till CA", string(test))
+	fmt.Println("Data till CA", string(jsonToCA))
 	response := sendToCa(jsonToCA, "GET")
+	filePath2 := filepath.Join("PrivateKeys", publicKey+".pem")
+	fmt.Println("test med filepath:", filePath2)
 
 	var dataFromCa dataFromCa
-	// fmt.Println("Responsen", response)
+	fmt.Println("Responsen", response)
 	json.Unmarshal([]byte(response), &dataFromCa)
 	if dataFromCa.Success == "true" {
-		filePath := ".\\PrivateKeys\\" + publicKey + ".pem"
-		// fmt.Println("data from CA NY:", dataFromCa.PrivateKey)
-		err := os.WriteFile(filePath, []byte(dataFromCa.PrivateKey), 0644)
+		// filePath := ".\\PrivateKeys\\" + publicKey + ".pem"
+
+		filePath2 := filepath.Join("PrivateKeys", publicKey+".pem")
+		fmt.Println("test med filepath:", filePath2)
+
+		fmt.Println("data from CA NY:", dataFromCa.PrivateKey)
+		err := os.WriteFile(filePath2, []byte(dataFromCa.PrivateKey), 0644)
 		if err != nil {
 			fmt.Println("Error writing to file, error code: ", err)
 		}
 		// fmt.Println("file wirthe")
-		message, err := importPEM(publicKey, filePath)
-		// fmt.Println("message:", message)
+		message, err := importPEM(publicKey, filePath2)
+		fmt.Println("message:", message)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return "false", message

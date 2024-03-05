@@ -103,3 +103,7 @@ type dataFromCa struct {
 	Success    string `json:"success"`
 	Message    string `json:"message"`
 }
+
+type addressToCA struct {
+	PublicKey string `json:"publicKey"`
+}

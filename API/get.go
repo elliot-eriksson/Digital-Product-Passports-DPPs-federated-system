@@ -109,17 +109,14 @@ func retrievePrivateKey(publicKey string) (success, message string) {
 	response := outboundCalls(jsonToCA, "GET", address)
 
 	var dataFromCa dataFromCa
-	fmt.Println("retrievePrivateKey Data from CA", response)
 	json.Unmarshal([]byte(response), &dataFromCa)
-	if dataFromCa.Success == "true" {
-		// filePath := ".\\PrivateKeys\\" + publicKey + ".pem"
-
+	if dataFromCa.Success {
 		filePath2 := filepath.Join("PrivateKeys", publicKey+".pem")
 		err := os.WriteFile(filePath2, []byte(dataFromCa.PrivateKey), 0644)
 		if err != nil {
 			fmt.Println("Error writing to file, error code: ", err)
 		}
-		// fmt.Println("file wirthe")
+		fmt.Println("\nfilepath2 is :", filePath2, "\nand datafromca is: ", dataFromCa.PrivateKey, "\n")
 		message, err := importPEM(publicKey, filePath2)
 		fmt.Println("retrievePrivateKey Message: ", message)
 		if err != nil {

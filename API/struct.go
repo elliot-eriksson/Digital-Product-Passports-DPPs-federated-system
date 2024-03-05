@@ -99,8 +99,8 @@ type dataToCA struct {
 }
 
 type dataFromCa struct {
+	Success    bool   `json:"success"`
 	PrivateKey string `json:"privateKey"`
-	Success    string `json:"success"`
 	Message    string `json:"message"`
 }
 

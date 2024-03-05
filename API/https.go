@@ -156,7 +156,7 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 			http.Error(writer, "Error uploading made_by to IPFS", http.StatusInternalServerError)
 			return
 		}
-		// addDataToIPNS(sh, dataToCA.Remanufacturing_events.Privatekey, cid)
+		addDataToIPNS(sh, dataToCA.Remanufacturing_events.Privatekey, cid)
 		if madeBy, ok := madeby["Made_by"].([]interface{}); ok {
 			for _, item := range madeBy {
 				if m, ok := item.(map[string]interface{}); ok {

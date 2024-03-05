@@ -32,12 +32,11 @@ func performChecks(sh *shell.Shell) error {
 }
 
 // query function that retrieves a passport and returns the result as two differtent datatypes.
-func queryPassport(client *mongo.Client, ctx context.Context, dataBase, col string, query interface{}) (resultM bson.M, resultD bson.D, err error) {
+func queryPassport(client *mongo.Client, ctx context.Context, dataBase, col string, query interface{}) (passData map[string]interface{}, err error) {
 
 	collection := client.Database(dataBase).Collection(col)
-
-	err = collection.FindOne(ctx, query).Decode(&resultM)
-	err = collection.FindOne(ctx, query).Decode(&resultD)
+	err = collection.FindOne(ctx, query).Decode(&passData)
+	fmt.Println("QUERYPASSPORT err", err)
 	return
 }
 
@@ -45,6 +44,7 @@ func queryPassport(client *mongo.Client, ctx context.Context, dataBase, col stri
 func jsonFormat(data primitive.A) (newJsonData string) {
 	jsonData, err := json.MarshalIndent(data, "", "   ")
 	if err != nil {
+		fmt.Println("--------------ad")
 		panic(err)
 	}
 	newJsonData = strings.Replace(string(jsonData), "\"Key\": ", "", -1)
@@ -64,6 +64,7 @@ func updateDatabase(client *mongo.Client, ctx context.Context, dataBase, col str
 	coll := client.Database(dataBase).Collection(col)
 	_, err := coll.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
+		fmt.Println("updateDatabase")
 		panic(err)
 	}
 }
@@ -99,35 +100,67 @@ func getSensitiveData(inputString string, resultD bson.D, sensetive int) (sensit
 	return sensitiveArray
 }
 
-// Uploads the passport to IPFS and calls updateDatabase(), where the filter is the CID
-func uploadAndUpdateCID(intSensitive int, resultM primitive.M, resultD primitive.D, client *mongo.Client, database, collection string) (cid string) {
-	sensitiveArray := getSensitiveData(fmt.Sprintf("%v", resultM["Sensitive"]), resultD, intSensitive)
-	jsonData := jsonFormat(sensitiveArray)
-	// fmt.Printf("json %s\n", jsonData)
-	var err error
-	var filter primitive.D
-	var update interface{}
-	if json.Valid([]byte(jsonData)) {
+func selectPassData(sensitiveLevel string, data map[string]interface{}) map[string]interface{} {
+	dataArray := data[sensitiveLevel]
+	test := fmt.Sprintf("%v", dataArray)
+	selectData := make(map[string]interface{})
 
-		var upploadString string = string(encryptIt([]byte(jsonData), "hej"))
-		cid, err = ipfs(upploadString)
+	fmt.Println("dataArray", test)
 
-		if err != nil {
-			panic(err)
-		}
-
-		if intSensitive == 0 {
-			filter = bson.D{{"_id", resultM["_id"]}}
-			update = bson.D{{"$set", bson.D{{"CID", cid}}}}
-		} else {
-			filter = bson.D{{"_id", resultM["_id"]}}
-			update = bson.D{{"$set", bson.D{{"CID_sen", cid}}}}
-		}
-
-		updateDatabase(client, context.TODO(), database, collection, filter, update)
-	} else {
-		fmt.Println("Not json valid")
+	for _, value := range test {
+		key := string(value)
+		fmt.Println("selectPassData key: ", key)
+		selectData[key] = data[key]
 	}
+	fmt.Println("selectPassData", selectData)
+	return selectData
+
+}
+
+// Uploads the passport to IPFS and calls updateDatabase(), where the filter is the CID
+func uploadAndUpdateCID(sensitiveLevel string, passData map[string]interface{}, client *mongo.Client, database, collection string) (cid string) {
+	fmt.Println("UPLOAD DATA FIRST LINE")
+	// sensitiveArray := getSensitiveData(fmt.Sprintf("%v", resultM["Sensitive"]), resultD, intSensitive)
+	uploadData := selectPassData(sensitiveLevel, passData)
+	fmt.Println("UPLOAD DATA ", uploadData)
+
+	jsonData, err := json.Marshal(uploadData)
+	fmt.Println("JSON DATA", jsonData)
+	// jsonData, err := json.format(uploadData)
+	if err != nil {
+		fmt.Println("Error marshalling object to JSON")
+		// Handle the case where the sensetiveArray is not found or not of the expected type
+	}
+
+	fmt.Println("JSON DATA", jsonData)
+	var ItemN string
+	fmt.Scan(&ItemN)
+
+	// fmt.Printf("json %s\n", jsonData)
+	// var err error
+	// var filter primitive.D
+	// var update interface{}
+	// if json.Valid([]byte(jsonData)) {
+
+	// 	var upploadString string = string(encryptIt([]byte(jsonData), "hej"))
+	// 	cid, err = ipfs(upploadString)
+
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	if intSensitive == 0 {
+	// 		filter = bson.D{{"_id", resultM["_id"]}}
+	// 		update = bson.D{{"$set", bson.D{{"CID", cid}}}}
+	// 	} else {
+	// 		filter = bson.D{{"_id", resultM["_id"]}}
+	// 		update = bson.D{{"$set", bson.D{{"CID_sen", cid}}}}
+	// 	}
+
+	// 	updateDatabase(client, context.TODO(), database, collection, filter, update)
+	// } else {
+	// 	fmt.Println("Not json valid")
+	// }
 	return cid
 }
 

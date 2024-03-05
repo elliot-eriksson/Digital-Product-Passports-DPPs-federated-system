@@ -58,16 +58,16 @@ func generateKey() (publicKey, privatekey string) {
 	publicKey = keyGenerator(randomName)
 	keyRename(randomName, publicKey)
 
-	keynamePriv := ".\\PrivateKeys\\" + publicKey + ".pem"
+	filePath2 := filepath.Join("PrivateKeys", publicKey+".pem")
 
 	// Create the directory if it doesn't exist
-	err := os.MkdirAll(".\\PrivateKeys\\", os.ModePerm)
-	if err != nil {
-		fmt.Println("Error creating directory:", err)
-		return
-	}
+	// err := os.MkdirAll(".\\PrivateKeys\\", os.ModePerm)
+	// if err != nil {
+	// 	fmt.Println("Error creating directory:", err)
+	// 	return
+	// }
 
-	cmd := exec.Command("ipfs", "key", "export", publicKey, "--format=pem-pkcs8-cleartext", "-o", keynamePriv)
+	cmd := exec.Command("ipfs", "key", "export", publicKey, "--format=pem-pkcs8-cleartext", "-o", filePath2)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println("Error executing command:", err)
@@ -75,7 +75,7 @@ func generateKey() (publicKey, privatekey string) {
 		return
 	}
 
-	data, err := os.ReadFile(keynamePriv)
+	data, err := os.ReadFile(filePath2)
 	privatekey = string(data)
 	return publicKey, privatekey
 }
@@ -105,27 +105,23 @@ func retrievePrivateKey(publicKey string) (success, message string) {
 		fmt.Println("Error unmarshaling jsonAdd, error code: ", err)
 	}
 	fmt.Println("Data till CA", string(jsonToCA))
-	response := sendToCa(jsonToCA, "GET")
-	filePath2 := filepath.Join("PrivateKeys", publicKey+".pem")
-	fmt.Println("test med filepath:", filePath2)
+	address := "https://d0020e-project-dpp.vercel.app/api/v1/CA/" + publicKey
+	response := outboundCalls(jsonToCA, "GET", address)
 
 	var dataFromCa dataFromCa
-	fmt.Println("Responsen", response)
+	fmt.Println("retrievePrivateKey Data from CA", response)
 	json.Unmarshal([]byte(response), &dataFromCa)
 	if dataFromCa.Success == "true" {
 		// filePath := ".\\PrivateKeys\\" + publicKey + ".pem"
 
 		filePath2 := filepath.Join("PrivateKeys", publicKey+".pem")
-		fmt.Println("test med filepath:", filePath2)
-
-		fmt.Println("data from CA NY:", dataFromCa.PrivateKey)
 		err := os.WriteFile(filePath2, []byte(dataFromCa.PrivateKey), 0644)
 		if err != nil {
 			fmt.Println("Error writing to file, error code: ", err)
 		}
 		// fmt.Println("file wirthe")
 		message, err := importPEM(publicKey, filePath2)
-		fmt.Println("message:", message)
+		fmt.Println("retrievePrivateKey Message: ", message)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return "false", message

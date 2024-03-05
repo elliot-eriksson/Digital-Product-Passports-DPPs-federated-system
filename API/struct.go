@@ -107,3 +107,7 @@ type dataFromCa struct {
 type addressToCA struct {
 	PublicKey string `json:"publicKey"`
 }
+
+type makesKey struct {
+	Makes string `json:"makes"`
+}

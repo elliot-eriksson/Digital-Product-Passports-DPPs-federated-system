@@ -65,7 +65,7 @@ func test(writer http.ResponseWriter, request *http.Request) {
 	passportData, _ := passport.(map[string]interface{})
 	madeby := passportData["Made_by"]
 	delete(passportData, "Made_by")
-	fmt.Println("made_bay", madeby)
+	fmt.Println("made_by", madeby)
 
 	if madeby != "" {
 		str := fmt.Sprintf("%v", madeby)
@@ -129,11 +129,11 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, "No valid type sent", http.StatusInternalServerError)
 		return
 	}
-	err = json.Unmarshal(body, &passport)
-	output, err := json.Marshal(passportData)
 
-	madeby := passportData["Made_by"]
+	madeby := make(map[string]interface{})
+	madeby["Made_by"] = passportData["Made_by"]
 	delete(passportData, "Made_by")
+	output, err := json.Marshal(passportData)
 
 	sh := shell.NewShell("localhost:5001")
 	cid, err := addFile(sh, string(output))
@@ -146,21 +146,40 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	if passType == "complete" {
 		dataToCA.Cid = cid
 		postData, _ := json.Marshal(dataToCA)
-		fmt.Println("dataToCA", string(postData))
-		sendToCa(postData, "POST")
+		outboundCalls(postData, "POST", "https://d0020e-project-dpp.vercel.app/api/v1/CA/")
 	}
-	fmt.Println("madeby string grej")
-	fmt.Println("madeby type:", reflect.TypeOf(madeby))
 	if reflect.TypeOf(madeby) != nil {
-		fmt.Println("borde inte vara här..")
 		madeByString := fmt.Sprintf("%v", madeby)
-		cid, err := addFile(sh, madeByString)
+		_, err := addFile(sh, madeByString)
 		if err != nil {
 			fmt.Println("Error uploading to IPFS", err)
 			http.Error(writer, "Error uploading made_by to IPFS", http.StatusInternalServerError)
 			return
 		}
-		addDataToIPNS(sh, dataToCA.Remanufacturing_events.Privatekey, cid)
+		// addDataToIPNS(sh, dataToCA.Remanufacturing_events.Privatekey, cid)
+		if madeBy, ok := madeby["Made_by"].([]interface{}); ok {
+			for _, item := range madeBy {
+				if m, ok := item.(map[string]interface{}); ok {
+					makesData := make(map[string]interface{})
+					makesData["CID"] = m["CID"]
+					jsonData, _ := json.Marshal(makesData)
+					dataFromCall := outboundCalls(jsonData, "GET", "http://localhost:80/retrieveData")
+					var makesKey makesKey
+					json.Unmarshal([]byte(dataFromCall), &makesKey)
+					if reflect.TypeOf(makesKey) != nil {
+						newString := fmt.Sprintf("%v", makesKey)
+						newString = newString[1 : len(newString)-1]
+						makesData["Key"] = newString
+						makesData["ProductType"] = m["ProductType"]
+						makesData["Datetime"] = m["Datetime"]
+						jsonData, _ := json.Marshal(makesData)
+						outboundCalls(jsonData, "POST", "http://localhost:80/addMutableProduct")
+						// fmt.Println("RESPONS", response)
+					}
+
+				}
+			}
+		}
 	}
 	response, err := json.Marshal(cid)
 	if err != nil {
@@ -172,28 +191,19 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	_, _ = writer.Write(response)
 }
 
-func sendToCa(body []byte, method string) string {
-	fmt.Println("JSON SENT TO CA \n", string(body))
-	var address string
-	if method == "GET" {
-		var addressToCA addressToCA
-		json.Unmarshal(body, &addressToCA)
-		fmt.Println(addressToCA.PublicKey)
-		address = "https://d0020e-project-dpp.vercel.app/api/v1/CA/" + addressToCA.PublicKey
-	} else {
-		address = "https://d0020e-project-dpp.vercel.app/api/v1/CA"
-	}
-	req, err := http.NewRequest(method, address, bytes.NewBuffer(body))
+func outboundCalls(body []byte, method string, address string) string {
 
-	// req, err := http.NewRequest(method, "http://localhost:80/test", bytes.NewBuffer(body))
+	fmt.Println("JSON SENT TO CA \n", string(body))
+	req, err := http.NewRequest(method, address, bytes.NewBuffer(body))
 
 	if err != nil {
 		fmt.Println("Error sending keys to CA", err)
 		return ""
 	}
+
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-	fmt.Println("requesten", req)
+	// fmt.Println("requesten", req)
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error Do", err)
@@ -209,9 +219,45 @@ func sendToCa(body []byte, method string) string {
 	return string(responseBody)
 }
 
+// func sendToCa(body []byte, method string) string {
+// 	fmt.Println("JSON SENT TO CA \n", string(body))
+// 	// var address string
+// 	// if method == "GET" {
+// 	// 	var addressToCA addressToCA
+// 	// 	json.Unmarshal(body, &addressToCA)
+// 	// 	// fmt.Println(addressToCA.PublicKey)
+// 	// 	address = "https://d0020e-project-dpp.vercel.app/api/v1/CA/" + addressToCA.PublicKey
+// 	// } else {
+// 	// 	address = "https://d0020e-project-dpp.vercel.app/api/v1/CA"
+// 	// }
+// 	// req, err := http.NewRequest(method, address, bytes.NewBuffer(body))
+
+// 	req, err := http.NewRequest(method, "http://localhost:80/test", bytes.NewBuffer(body))
+
+// 	if err != nil {
+// 		fmt.Println("Error sending keys to CA", err)
+// 		return ""
+// 	}
+// 	req.Header.Set("Content-Type", "application/json")
+// 	client := &http.Client{}
+// 	// fmt.Println("requesten", req)
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		fmt.Println("Error Do", err)
+// 		return ""
+// 	}
+// 	defer resp.Body.Close()
+// 	responseBody, err := io.ReadAll(resp.Body)
+// 	if err != nil {
+// 		fmt.Println("Error readall", err)
+// 		return ""
+// 	}
+// 	fmt.Println("Response from CA: ", string(responseBody))
+// 	return string(responseBody)
+// }
+
 func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
-	fmt.Println("REQUEST METHODE", request.Method)
 	//Check that messages is Put
 	if request.Method != http.MethodPost {
 		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
@@ -228,7 +274,6 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	var MutableData httpData
 
 	err = json.Unmarshal(body, &MutableData)
-	fmt.Println("After first unmarshal", MutableData.Key)
 	if err != nil {
 		fmt.Println("Put request failed", err)
 	}
@@ -249,7 +294,6 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	var appendEntry []appendEntry
 
 	dataOnIPNS := catRemanContent(MutableData.Key)
-	fmt.Println("------>NYTT TEST SAMUEL REMANCONTENTCAT:", dataOnIPNS)
 	tmpByte, _ = json.Marshal([]byte(dataOnIPNS))
 	json.Unmarshal(tmpByte, &record)
 
@@ -286,21 +330,16 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	newJsonData = "[" + newJsonData + "]"
 
 	cid, err = addFile(sh, newJsonData)
-	fmt.Println("CID before key check", cid)
 	if err != nil {
 		fmt.Println("Error adding file to IPNS: ", err)
 	}
-	fmt.Println("Before checkKey", MutableData.Key)
-	if !checkKey(MutableData.Key) {
+	if checkKey(MutableData.Key) {
 		addDataToIPNS(sh, MutableData.Key, cid)
 		writer.WriteHeader(http.StatusOK)
 		statusText := "Data added"
 		_, _ = writer.Write([]byte(statusText))
 	} else {
 		success, message := retrievePrivateKey(MutableData.Key)
-		fmt.Println("Success", success)
-		fmt.Println("Successmessage", message)
-
 		if success == "true" {
 			addDataToIPNS(sh, MutableData.Key, cid)
 			writer.WriteHeader(http.StatusOK)
@@ -319,7 +358,7 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 
 func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
-	fmt.Println("REQUEST METHODE", request.Method)
+
 	//Check that messages is Get
 	if request.Method != http.MethodGet {
 		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
@@ -344,12 +383,10 @@ func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 
 	if chooseEvent.Type == "AllEvent" {
 		remanData := catRemanContent(chooseEvent.Key)
-		fmt.Println("remanData", remanData)
 		err = json.Unmarshal([]byte(remanData), &getEvent)
 		if err != nil {
 			fmt.Println("Error unmarshaling remanData, error code: ", err)
 		}
-		fmt.Println("CID: ", getEvent)
 
 		for i, _ := range getEvent {
 
@@ -360,8 +397,8 @@ func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 
 			data := getPassport(newJsonData, "")
 			data = data + "\n"
-			fmt.Println("data: ", data)
-			fmt.Println("CID: ", getEvent[i])
+			// fmt.Println("data: ", data)
+			// fmt.Println("CID: ", getEvent[i])
 
 			writer.WriteHeader(http.StatusOK)
 			_, _ = writer.Write([]byte(data))
@@ -372,7 +409,7 @@ func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 
 	} else if chooseEvent.Type == "LastEvent" {
 		remanData := catRemanContent(chooseEvent.Key)
-		fmt.Println("remanData", remanData)
+		// fmt.Println("remanData", remanData)
 		err = json.Unmarshal([]byte(remanData), &getEvent)
 		if err != nil {
 			fmt.Println("Error unmarshaling remanData, error code: ", err)
@@ -394,7 +431,6 @@ func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 
 func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
-	fmt.Println("REQUEST METHODE", request.Method)
 	//Check that messages is Put
 	if request.Method != http.MethodPost {
 		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
@@ -498,7 +534,6 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 		record2 = strings.Replace(record2, "]", "", -1)
 		record2 = strings.Replace(record2, "}{", "},{", -1)
 		record2 = "[" + record2 + "]"
-		fmt.Println("DATAN SOM BLIR UPPLADDADDD:) \n", record2)
 
 		sh := shell.NewShell("localhost:5001")
 		cid, err := addFile(sh, record2)
@@ -528,7 +563,6 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 
 func retrieveMutableLog(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
-	fmt.Println("REQUEST METHODE", request.Method)
 	//Check that messages is Get
 	if request.Method != http.MethodGet {
 		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)

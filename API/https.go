@@ -52,26 +52,26 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func test(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Content-Type", "application/json")
-	var passport interface{}
-	body, err := io.ReadAll(request.Body)
-	if err != nil {
-		fmt.Println("Error reading body", err)
-		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
-		return
-	}
-	err = json.Unmarshal(body, &passport)
-	passportData, _ := passport.(map[string]interface{})
-	madeby := passportData["Made_by"]
-	delete(passportData, "Made_by")
-	fmt.Println("made_by", madeby)
+// func test(writer http.ResponseWriter, request *http.Request) {
+// 	writer.Header().Set("Content-Type", "application/json")
+// 	var passport interface{}
+// 	body, err := io.ReadAll(request.Body)
+// 	if err != nil {
+// 		fmt.Println("Error reading body", err)
+// 		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
+// 		return
+// 	}
+// 	err = json.Unmarshal(body, &passport)
+// 	passportData, _ := passport.(map[string]interface{})
+// 	madeby := passportData["Made_by"]
+// 	delete(passportData, "Made_by")
+// 	fmt.Println("made_by", madeby)
 
-	if madeby != "" {
-		str := fmt.Sprintf("%v", madeby)
-		fmt.Println("EFTER IF", str)
-	}
-}
+// 	if madeby != "" {
+// 		str := fmt.Sprintf("%v", madeby)
+// 		fmt.Println("EFTER IF", str)
+// 	}
+// }
 
 func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
@@ -173,8 +173,9 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 						makesData["ProductType"] = m["ProductType"]
 						makesData["Datetime"] = m["Datetime"]
 						jsonData, _ := json.Marshal(makesData)
-						outboundCalls(jsonData, "POST", "http://localhost:80/addMutableProduct")
-						// fmt.Println("RESPONS", response)
+						fmt.Println("JsonData befor last OutboundCall", string(jsonData))
+						response := outboundCalls(jsonData, "POST", "http://localhost:80/addMutableProduct")
+						fmt.Println("RESPONS", response)
 					}
 
 				}
@@ -193,7 +194,7 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 
 func outboundCalls(body []byte, method string, address string) string {
 
-	fmt.Println("JSON SENT TO CA \n", string(body))
+	fmt.Println("JSON outbound \n", string(body))
 	req, err := http.NewRequest(method, address, bytes.NewBuffer(body))
 
 	if err != nil {
@@ -481,9 +482,10 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 		sh := shell.NewShell("localhost:5001")
 		cid, _ := addFile(sh, string(result))
 		if checkKey(MutableData.Key) {
-			addDataToIPNS(sh, MutableData.Key, cid)
+			fmt.Println("RAD 485 HTTPS, MutableData.Key =", MutableData.Key)
+			statusText, _ := addDataToIPNS(sh, MutableData.Key, cid)
 			writer.WriteHeader(http.StatusOK)
-			statusText := "Data added"
+			// statusText := "Data added"
 			_, _ = writer.Write([]byte(statusText))
 		} else {
 			success, message := retrievePrivateKey(MutableData.Key)

@@ -173,11 +173,11 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 						makesData["ProductType"] = m["ProductType"]
 						makesData["Datetime"] = m["Datetime"]
 						jsonData, _ := json.Marshal(makesData)
-						fmt.Println("JsonData befor last OutboundCall", string(jsonData))
-						response := outboundCalls(jsonData, "POST", "http://localhost:80/addMutableProduct")
-						fmt.Println("RESPONS", response)
+						if makesData["Key"] != "" {
+							response := outboundCalls(jsonData, "POST", "http://localhost:80/addMutableProduct")
+							fmt.Println("RESPONS 180", response)
+						}
 					}
-
 				}
 			}
 		}
@@ -456,6 +456,7 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 	var record []appendEntryProduct
 	var record2 []appendEntryProduct
 	var appendEntry []appendEntryProduct
+
 	dataOnIPNS := catRemanContent(MutableData.Key)
 
 	tmpByte, _ := json.Marshal([]byte(dataOnIPNS))
@@ -482,7 +483,6 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 		sh := shell.NewShell("localhost:5001")
 		cid, _ := addFile(sh, string(result))
 		if checkKey(MutableData.Key) {
-			fmt.Println("RAD 485 HTTPS, MutableData.Key =", MutableData.Key)
 			statusText, _ := addDataToIPNS(sh, MutableData.Key, cid)
 			writer.WriteHeader(http.StatusOK)
 			// statusText := "Data added"

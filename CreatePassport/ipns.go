@@ -8,39 +8,6 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 )
 
-// --- TEST & USAGE OF EXPORT/IMPORT PRIV KEY ---
-
-//exportPrivKey("testkey")
-//privKeyCID := uploadPrivKey()
-//fmt.Println(privKeyCID)
-//temp := strings.Split(privKeyCID, " ")
-//importPrivKey(temp[1])
-
-//SELF := "k51qzi5uqu5dgpie7j0flapmw67becwedlv5vjsvrsp634va9pl4pl3oe0yvyn"
-//LKAB := "k51qzi5uqu5dk0lknwezqu0hrcbgpbbrpynp3r5nh9typbj861k79bu8bud64t"
-//SSAB := "k51qzi5uqu5dlhsqq2mlmroidrca8vuautxhmbcmb5bvmb4g1lvljpj4fanf3x"
-//VOLVO := "k51qzi5uqu5dhqmsy1voi1wegln7cvehdqt7o2n485j451j5mqxpm1rccpzyga"
-
-//cid := "QmUbd3ZArm3fkLYK37oh17yAML218j4XuVnK4rGbG1b8Sz"
-
-// Initialize IPFS shell
-//sh := shell.NewShell("127.0.0.1:5001")
-
-// Use this to test the creation of an IPNS record. The second argument is the public key, the third key is the IPFS record we want to point at.
-//addDataToIPNS(sh, VOLVO, cid)
-
-// Use this to test the creation of public keys. The second argument (a string) is the alias for the created key.
-//fmt.Println(keyGenerator(sh, "samuelsnyckel"))
-
-// Use this to test the retrieval of an IPNS record. The second argument is a CID or a public key (string)
-// thisvar, err := lsIPNS(sh, "k51qzi5uqu5dlhsqq2mlmroidrca8vuautxhmbcmb5bvmb4g1lvljpj4fanf3x")
-// if err != nil {
-// 	fmt.Println("big error oh no")
-// }
-// content, contentLength := splitListContent(thisvar)
-// fmt.Println("content är : ", content, "med length: ", contentLength)
-// catContent(content, contentLength)
-
 func importPrivKey(CID string) {
 	// download privkey from an IPFS node
 	cmd := exec.Command("ipfs", "get", CID)
@@ -81,6 +48,14 @@ func exportPrivKey(keyAlias string) {
 		return
 	}
 	fmt.Println("Private key successfully exported to path: ./privkey.pem")
+}
+
+func LinkMakesAdd(str string) string {
+	// echo "new test string to upload" | ipfs add -w
+	sh := shell.NewShell("localhost:5001")
+	res, _ := addFile(sh, str)
+	return res
+
 }
 
 // Splitting the different files into their own string.
@@ -166,7 +141,7 @@ func lsIPNS(sh *shell.Shell, key string) (string, error) {
 }
 
 // Generates public key
-func keyGenerator(sh *shell.Shell, keyAlias string) string {
+func keyGenerator(keyAlias string) string {
 	cmd := exec.Command("ipfs", "key", "gen", keyAlias)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -180,6 +155,17 @@ func keyGenerator(sh *shell.Shell, keyAlias string) string {
 
 func keyRename(newAlias string) {
 	cmd := exec.Command("ipfs", "key", "rename", "tempAlias", newAlias)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(output))
+		return
+	}
+	fmt.Println(string(output))
+	return
+}
+
+func keyRenameLinkMakes(newAlias string, input string) {
+	cmd := exec.Command("ipfs", "key", "rename", input, "LinkMakes_"+newAlias)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(string(output))
@@ -222,11 +208,12 @@ func cidToCMD(cid string) string {
 }
 
 // Uploads data to IPNS and return that adress, also does the same when you want to update information.
-func addDataToIPNS(sh *shell.Shell, key string, cid string) (string, error) {
+func addDataToIPNS(key string, cid string) string {
 	cmd := exec.Command("ipfs", "name", "publish", hashToCMD(key), cidToCMD(cid))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("failed to publish IPNS record: %v, output: %s", err, output)
+		return string(output)
+		//return fmt.Errorf("failed to publish IPNS record: %v, output: %s", err, output)
 	}
-	return string(output), nil
+	return string(output)
 }

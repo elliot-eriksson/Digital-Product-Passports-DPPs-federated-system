@@ -195,6 +195,8 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 func outboundCalls(body []byte, method string, address string) string {
 
 	fmt.Println("JSON outbound \n", string(body))
+	fmt.Println("Outbound Address\n", address)
+
 	req, err := http.NewRequest(method, address, bytes.NewBuffer(body))
 
 	if err != nil {

@@ -16,6 +16,7 @@ func main() {
 	var database string
 	var collection string
 	var cid string
+	var lmArray []string
 
 	// Lets you chose witch of the three test database create to uppdate.
 	fmt.Println("What database and table do you want? 1: LKAB, 2: SSAB, 3: VOLVO")
@@ -47,21 +48,34 @@ func main() {
 	}
 
 	//funktionsanrop för passport meny. Presenterar en med 2 stycken val just nu. Antingen skapa ett nytt passport eller återskapa en qr-kod
-	itemID := passportMenu(client, database, collection)
+	itemID, randomName, lmArray := passportMenu(client, database, collection, lmArray)
 	if itemID != 0 {
 		var filter interface{}
 		filter = bson.D{{"ItemID", itemID}}
-		resultM, resultD, err := queryPassport(client, ctx, database, collection, filter)
+		passData, err := queryPassport(client, ctx, database, collection, filter)
+		fmt.Println("MAIN QUERRY1", passData)
+		fmt.Println("MAIN ERR", err)
 		if err != nil {
+			fmt.Println("PANIC MAIN")
 			panic(err)
 		}
 
 		// 1 for Sensitive Passport
-		cid = uploadAndUpdateCID(1, resultM, resultD, client, database, collection)
+		cid = uploadAndUpdateCID("sensitiveArray", passData, client, database, collection)
 		// 0 for Non Sensitive Passport
-		resultM2, resultD2, err := queryPassport(client, ctx, database, collection, filter)
-		cid = uploadAndUpdateCID(0, resultM2, resultD2, client, database, collection)
+		passData2, err := queryPassport(client, ctx, database, collection, filter)
+		cid = uploadAndUpdateCID("nonSensitiveArray", passData2, client, database, collection)
 		keyRename(cid)
+		keyRenameLinkMakes(cid, randomName)
 		generateQRCode(cid)
+		genLinkMakes := generateLinkMakesData(cid)
+
+		// iterates through the linkmadefrom array (lmArray) and retrieves their respective keys. The key pointers are then updated to show the CID for the recently created product.
+		if len(lmArray) > 0 {
+			for i := 0; i < len(lmArray); i++ {
+				res := testLinkMakes(lmArray[i])
+				addDataToIPNS(res, genLinkMakes)
+			}
+		}
 	}
 }

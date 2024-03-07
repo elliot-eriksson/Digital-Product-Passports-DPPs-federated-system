@@ -10,11 +10,13 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"time"
 
 	shell "github.com/ipfs/go-ipfs-api"
 	qrcode "github.com/skip2/go-qrcode"
 )
 
+// Function that handles the retrieval of passports from IPFS requires a CID
 func getHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	//Check that messages is GET
@@ -34,7 +36,7 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 
 	if tmpStringClaim.CID[0] == 81 { // checks if the first char is Q
 		CID := "/ipfs/" + tmpStringClaim.CID
-		Dpp := getPassport(CID, "")
+		Dpp := getPassport(CID)
 		writer.WriteHeader(http.StatusOK)
 		_, _ = writer.Write([]byte(Dpp))
 
@@ -44,6 +46,7 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
+// Used to give generated private keys a temporary random name before being renamed to the responding public key
 func randSeq(n int) string {
 	b := make([]rune, n)
 	for i := range b {
@@ -52,31 +55,13 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-// func test(writer http.ResponseWriter, request *http.Request) {
-// 	writer.Header().Set("Content-Type", "application/json")
-// 	var passport interface{}
-// 	body, err := io.ReadAll(request.Body)
-// 	if err != nil {
-// 		fmt.Println("Error reading body", err)
-// 		http.Error(writer, "Error reading body", http.StatusNotAcceptable)
-// 		return
-// 	}
-// 	err = json.Unmarshal(body, &passport)
-// 	passportData, _ := passport.(map[string]interface{})
-// 	madeby := passportData["Made_by"]
-// 	delete(passportData, "Made_by")
-// 	fmt.Println("made_by", madeby)
-
-// 	if madeby != "" {
-// 		str := fmt.Sprintf("%v", madeby)
-// 		fmt.Println("EFTER IF", str)
-// 	}
-// }
-
+// Creates a DPP with the information contained in the call to the endpoint. It can create either simple/barebone passports without keys or a complete with keys.
+// If the passport is created with keys it uploads the public and private keys to the CA.
+// If the call contains the field Made_by it uploads that to the responding key and updates the makes log in the responding passports.
 func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 
-	//Check that messages is Put
+	//Check that messages is Post
 	if request.Method != http.MethodPost {
 		http.Error(writer, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -100,6 +85,7 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	passportData, _ := passport.(map[string]interface{})
 	passType := passportData["Type"]
 	delete(passportData, "Type")
+	// Generates the 4 keypairs needed for a complete passport
 	if passType == "complete" {
 
 		pubKey, privKey := generateKey()
@@ -123,7 +109,7 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 		dataToCA.Made_from.Publickey = pubKey
 
 	} else if passType == "simple" {
-
+		// If the passport is a simple/barebone passport there is no need for key generation
 	} else {
 		fmt.Println("No valid type sent")
 		http.Error(writer, "No valid type sent", http.StatusInternalServerError)
@@ -136,6 +122,8 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	output, err := json.Marshal(passportData)
 
 	sh := shell.NewShell("localhost:5001")
+	// Uploads the passport to IPFS, with all information contained in the call except the Made_by and Type fields.
+	// This gives the program possibility to be handle different types of passport containing different data fields.
 	cid, err := addFile(sh, string(output))
 	if err != nil {
 		fmt.Println("Error uploading to IPFS", err)
@@ -143,20 +131,37 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	// Uploads the generated keys to the CA
 	if passType == "complete" {
 		dataToCA.Cid = cid
 		postData, _ := json.Marshal(dataToCA)
 		outboundCalls(postData, "POST", "https://d0020e-project-dpp.vercel.app/api/v1/CA/")
 	}
+
+	// Populates the Made_by key with the data contained in the Made_by field
 	if reflect.TypeOf(madeby) != nil {
-		madeByString := fmt.Sprintf("%v", madeby)
-		_, err := addFile(sh, madeByString)
+		var data map[string]interface{}
+		if err := json.Unmarshal([]byte(body), &data); err != nil {
+			fmt.Println("Error unmarshal made_by Main 157")
+			http.Error(writer, "Error unmarshal Made_by", http.StatusInternalServerError)
+		}
+		madeByJSON, err := json.Marshal(data["Made_by"])
+		if err != nil {
+			fmt.Println("Error marshal made_by Main 163")
+			http.Error(writer, "Error in Made_by", http.StatusInternalServerError)
+		}
+		madeByString := string(madeByJSON)
+		// Uploads Made_by to IPFS
+		cidMade, err := addFile(sh, madeByString)
 		if err != nil {
 			fmt.Println("Error uploading to IPFS", err)
 			http.Error(writer, "Error uploading made_by to IPFS", http.StatusInternalServerError)
 			return
 		}
-		addDataToIPNS(sh, dataToCA.Remanufacturing_events.Privatekey, cid)
+		// Points the Made_by private key to the newly created log containing the Made_by data (Publish to IPNS)
+		addDataToIPNS(sh, dataToCA.Made_from.Publickey, cidMade)
+
+		// Goes through the incoming made_by and retrieves the key from each of the CID contained within.
 		if madeBy, ok := madeby["Made_by"].([]interface{}); ok {
 			for _, item := range madeBy {
 				if m, ok := item.(map[string]interface{}); ok {
@@ -170,9 +175,11 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 						newString := fmt.Sprintf("%v", makesKey)
 						newString = newString[1 : len(newString)-1]
 						makesData["Key"] = newString
-						makesData["ProductType"] = m["ProductType"]
-						makesData["Datetime"] = m["Datetime"]
+						makesData["CID"] = cid
+						makesData["ProductType"] = passportData["ProductType"]
+						makesData["Datetime"] = time.Now().Format("YYYY-MM-DD")
 						jsonData, _ := json.Marshal(makesData)
+						// Updates the Make data for each of the made_by passes
 						if makesData["Key"] != "" {
 							response := outboundCalls(jsonData, "POST", "http://localhost:80/addMutableProduct")
 							fmt.Println("RESPONS 180", response)
@@ -192,6 +199,7 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	_, _ = writer.Write(response)
 }
 
+// Handles outbound calls the API does to the CA as well as some calls to itself.
 func outboundCalls(body []byte, method string, address string) string {
 
 	fmt.Println("JSON outbound \n", string(body))
@@ -218,47 +226,12 @@ func outboundCalls(body []byte, method string, address string) string {
 		fmt.Println("Error readall", err)
 		return ""
 	}
-	fmt.Println("Response from CA: ", string(responseBody))
+	fmt.Println("Response from OutboundCall: ", string(responseBody))
 	return string(responseBody)
 }
 
-// func sendToCa(body []byte, method string) string {
-// 	fmt.Println("JSON SENT TO CA \n", string(body))
-// 	// var address string
-// 	// if method == "GET" {
-// 	// 	var addressToCA addressToCA
-// 	// 	json.Unmarshal(body, &addressToCA)
-// 	// 	// fmt.Println(addressToCA.PublicKey)
-// 	// 	address = "https://d0020e-project-dpp.vercel.app/api/v1/CA/" + addressToCA.PublicKey
-// 	// } else {
-// 	// 	address = "https://d0020e-project-dpp.vercel.app/api/v1/CA"
-// 	// }
-// 	// req, err := http.NewRequest(method, address, bytes.NewBuffer(body))
-
-// 	req, err := http.NewRequest(method, "http://localhost:80/test", bytes.NewBuffer(body))
-
-// 	if err != nil {
-// 		fmt.Println("Error sending keys to CA", err)
-// 		return ""
-// 	}
-// 	req.Header.Set("Content-Type", "application/json")
-// 	client := &http.Client{}
-// 	// fmt.Println("requesten", req)
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		fmt.Println("Error Do", err)
-// 		return ""
-// 	}
-// 	defer resp.Body.Close()
-// 	responseBody, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		fmt.Println("Error readall", err)
-// 		return ""
-// 	}
-// 	fmt.Println("Response from CA: ", string(responseBody))
-// 	return string(responseBody)
-// }
-
+// Adds event to Remanufacturing or Shipping
+// Requires the responding key and the event data
 func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	//Check that messages is Put
@@ -287,6 +260,8 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	uploadData, _ := json.Marshal(MutableDataToUpload)
 
 	sh := shell.NewShell("localhost:5001")
+
+	// Adds the new event data to IPFS
 	cid, err := addFile(sh, string(uploadData))
 	if err != nil {
 		fmt.Println("Failed to add file to IPNS", err)
@@ -296,6 +271,7 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	var record []appendEntry
 	var appendEntry []appendEntry
 
+	// Retrieves the current event log on the given key
 	dataOnIPNS := catRemanContent(MutableData.Key)
 	tmpByte, _ = json.Marshal([]byte(dataOnIPNS))
 	json.Unmarshal(tmpByte, &record)
@@ -319,6 +295,7 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println("Error unmarshaling newString, error code: ", err)
 	}
 
+	// Appends the new event to the event log
 	record = append(record, appendEntry...)
 	recordJson, err := json.Marshal(record)
 	newRecord := append([]byte(dataOnIPNS), recordJson...)
@@ -332,10 +309,15 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	newJsonData = strings.Replace(newJsonData, "}{", "},{", -1)
 	newJsonData = "[" + newJsonData + "]"
 
+	// Upload the new event log to IPFS
 	cid, err = addFile(sh, newJsonData)
 	if err != nil {
 		fmt.Println("Error adding file to IPNS: ", err)
 	}
+
+	// Check if local node already has the private key responding to the public key.
+	// If it does updates the IPNS record to point to new event log.
+	// Else retrieves the private key from the CA and then update IPNS
 	if checkKey(MutableData.Key) {
 		addDataToIPNS(sh, MutableData.Key, cid)
 		writer.WriteHeader(http.StatusOK)
@@ -359,6 +341,8 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// Retrieves either the latest or all events corresponding to a private key.
+// Used for Remanufacturing or Shipping events
 func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 
@@ -385,23 +369,18 @@ func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if chooseEvent.Type == "AllEvent" {
+		// Retrieves all events corresponding to a private key.
 		remanData := catRemanContent(chooseEvent.Key)
 		err = json.Unmarshal([]byte(remanData), &getEvent)
 		if err != nil {
 			fmt.Println("Error unmarshaling remanData, error code: ", err)
 		}
-
+		// Loops though the event log and returns all the events one by one
 		for i, _ := range getEvent {
-
-			fmt.Sprintf("%v", getEvent[i])
-
 			newJsonData := strings.Replace(fmt.Sprintf("%v", getEvent[i]), "{", "", -1)
 			newJsonData = strings.Replace(newJsonData, "}", "", -1)
-
-			data := getPassport(newJsonData, "")
+			data := getPassport(newJsonData)
 			data = data + "\n"
-			// fmt.Println("data: ", data)
-			// fmt.Println("CID: ", getEvent[i])
 
 			writer.WriteHeader(http.StatusOK)
 			_, _ = writer.Write([]byte(data))
@@ -411,6 +390,7 @@ func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 		// if needed it can be implemented
 
 	} else if chooseEvent.Type == "LastEvent" {
+		// Retrieves last/latest event corresponding to a private key.
 		remanData := catRemanContent(chooseEvent.Key)
 		// fmt.Println("remanData", remanData)
 		err = json.Unmarshal([]byte(remanData), &getEvent)
@@ -421,7 +401,7 @@ func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 		getLast := strings.Replace(fmt.Sprintf("%v", getEvent[len(getEvent)-1]), "{", "", -1)
 		getLast = strings.Replace(getLast, "}", "", -1)
 
-		data := getPassport(getLast, "")
+		data := getPassport(getLast)
 
 		writer.WriteHeader(http.StatusOK)
 		_, _ = writer.Write([]byte(data))
@@ -432,6 +412,7 @@ func retriveEvent(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// Adds a product to the made_by or makes logs for a passport
 func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	//Check that messages is Put
@@ -453,12 +434,13 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		fmt.Println("Put request failed", err)
 	}
-
+	fmt.Println("AddMutableProduct Body 459 ", string(body))
 	remanEventData := make(map[string]interface{})
 	var record []appendEntryProduct
 	var record2 []appendEntryProduct
 	var appendEntry []appendEntryProduct
 
+	// Retrieves current log
 	dataOnIPNS := catRemanContent(MutableData.Key)
 
 	tmpByte, _ := json.Marshal([]byte(dataOnIPNS))
@@ -466,6 +448,11 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 
 	json.Unmarshal(tmpByte, &record)
 	found := false
+
+	// Checks if the new product already exists in current log.
+	// If exists update current log by changing the product information to the new provided information.
+	// Else adds the new information as a new product last in the log
+
 	if MutableData.CIDToReplace != "" {
 		for i := 0; i < len(record2); i++ {
 			if record2[i].CID == MutableData.CIDToReplace {
@@ -483,11 +470,15 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 		}
 		result, _ := json.Marshal(record2)
 		sh := shell.NewShell("localhost:5001")
+		// Uploads new event log to IPFS
 		cid, _ := addFile(sh, string(result))
+
+		// Check if local node already has the private key responding to the public key.
+		// If it does updates the IPNS record to point to new event log.
+		// Else retrieves the private key from the CA and then update IPNS
 		if checkKey(MutableData.Key) {
 			statusText, _ := addDataToIPNS(sh, MutableData.Key, cid)
 			writer.WriteHeader(http.StatusOK)
-			// statusText := "Data added"
 			_, _ = writer.Write([]byte(statusText))
 		} else {
 			success, message := retrievePrivateKey(MutableData.Key)
@@ -540,7 +531,11 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 		record2 = "[" + record2 + "]"
 
 		sh := shell.NewShell("localhost:5001")
+		// Uploads new event log to IPFS
 		cid, err := addFile(sh, record2)
+		// Check if local node already has the private key responding to the public key.
+		// If it does updates the IPNS record to point to new event log.
+		// Else retrieves the private key from the CA and then update IPNS
 		if checkKey(MutableData.Key) {
 			addDataToIPNS(sh, MutableData.Key, cid)
 			writer.WriteHeader(http.StatusOK)
@@ -565,6 +560,7 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// Retrieves the whole event log from a public key
 func retrieveMutableLog(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	//Check that messages is Get
@@ -594,6 +590,8 @@ func retrieveMutableLog(writer http.ResponseWriter, request *http.Request) {
 
 }
 
+// Generates a QR code from a CID by retrieving the passport.
+// Returns the filename = CID and a base 64 encoding of the QR code
 func generateQrCode(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 
@@ -620,7 +618,8 @@ func generateQrCode(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	CID := "/ipfs/" + tmpStringClaim.CID
-	Dpp := getPassport(CID, "")
+	// Retrieves passport from IPFS
+	Dpp := getPassport(CID)
 
 	var QrCode QrCode
 	var QrCodeImage QrCodeImage
@@ -632,12 +631,14 @@ func generateQrCode(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, "Error marshaling QrCode", http.StatusNotAcceptable)
 		return
 	}
+	// Generate QR code with predetermined data fields such as Product name
 	png, err := qrcode.Encode(string(qrString), qrcode.Medium, 256)
 	if err != nil {
 		fmt.Println("Error encoding QrCode", err)
 		http.Error(writer, "Error encoding QrCode", http.StatusNotAcceptable)
 		return
 	}
+	// Base64 encodes the QR code
 	base64Encoded := base64.StdEncoding.EncodeToString(png)
 	QrCodeImage.Filename = tmpStringClaim.CID
 	QrCodeImage.Content = base64Encoded

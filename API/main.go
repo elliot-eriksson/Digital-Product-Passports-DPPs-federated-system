@@ -5,10 +5,9 @@ import (
 	"net/http"
 )
 
-// Message is a struct representing the response format
-
 func main() {
 
+	// The endpoints in use check API doc for description of call structure
 	getURL := "/retrieveData"
 	createPassportURL := "/publishPassport"
 	addRemanafactureEventURL := "/addEvent"
@@ -16,8 +15,6 @@ func main() {
 	addMutableProductURL := "/addMutableProduct"
 	retrieveMutableLogURL := "/retrieveMutableLog"
 	generateQcodeURL := "/getQrCode"
-	// testUTL := "/test"
-	// http.HandleFunc(testUTL, test)
 
 	http.HandleFunc(getURL, getHandler)
 	http.HandleFunc(createPassportURL, createPassportHandler)

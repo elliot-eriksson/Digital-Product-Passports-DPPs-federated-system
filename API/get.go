@@ -25,10 +25,12 @@ func readFile(sh *shell.Shell, cid string) (*string, error) {
 
 	text := string(bytes)
 
+	pinToIPFS(cid)
+
 	return &text, nil
 }
 
-func passportFromCID(cid, key string) (target map[string]interface{}) {
+func passportFromCID(cid string) (target map[string]interface{}) {
 	sh := shell.NewShell("localhost:5001")
 	text, err := readFile(sh, cid)
 	if err != nil {
@@ -39,8 +41,8 @@ func passportFromCID(cid, key string) (target map[string]interface{}) {
 	return target
 }
 
-func getPassport(cid, key string) string {
-	result := passportFromCID(cid, key)
+func getPassport(cid string) string {
+	result := passportFromCID(cid)
 	jsonStr, err := json.Marshal(result)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -59,13 +61,6 @@ func generateKey() (publicKey, privatekey string) {
 	keyRename(randomName, publicKey)
 
 	filePath2 := filepath.Join("PrivateKeys", publicKey+".pem")
-
-	// Create the directory if it doesn't exist
-	// err := os.MkdirAll(".\\PrivateKeys\\", os.ModePerm)
-	// if err != nil {
-	// 	fmt.Println("Error creating directory:", err)
-	// 	return
-	// }
 
 	cmd := exec.Command("ipfs", "key", "export", publicKey, "--format=pem-pkcs8-cleartext", "-o", filePath2)
 	output, err := cmd.CombinedOutput()
@@ -126,5 +121,14 @@ func retrievePrivateKey(publicKey string) (success, message string) {
 		return "true", message
 	} else {
 		return "false", dataFromCa.Message
+	}
+}
+
+// Pin the CID to the local IPFS node
+func pinToIPFS(cid string) {
+	sh := shell.NewShell("localhost:5001")
+	err := sh.Pin(cid)
+	if err != nil {
+		fmt.Println("Error pinToIPFS : ", err)
 	}
 }

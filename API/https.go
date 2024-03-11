@@ -625,9 +625,17 @@ func generateQrCode(writer http.ResponseWriter, request *http.Request) {
 	var QrCodeImage QrCodeImage
 	QrCode.CID = tmpStringClaim.CID
 	json.Unmarshal([]byte(Dpp), &QrCode)
-	qrString, err := json.Marshal(QrCode)
+	// qrString, err := json.Marshal(QrCode)
+	// if err != nil {
+	// 	fmt.Println("Error marshaling QrCode", err)
+	// 	http.Error(writer, "Error marshaling QrCode", http.StatusNotAcceptable)
+	// 	return
+	// }
+	qrString, err := json.MarshalIndent(QrCode, "", "    ")
+	fmt.Println("NYA QR CODEN", string(qrString))
+
 	if err != nil {
-		fmt.Println("Error marshaling QrCode", err)
+		fmt.Println("Error marshal indenting http.go 636", err)
 		http.Error(writer, "Error marshaling QrCode", http.StatusNotAcceptable)
 		return
 	}

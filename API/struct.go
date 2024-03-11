@@ -61,12 +61,10 @@ type appendEntryProduct struct {
 
 type QrCode struct {
 	CID                    string `json: CID`
-	Data                   string `json: Data`
 	MaterialId             string `json: MaterialId`
 	OrderId                string `json: OrderId`
 	Dimensions             string `json: Dimensions`
 	Plant                  string `json: Plant`
-	Entrydate              string `json: Entrydate`
 	Remanufacturing_events string `json:"remanufacturing_events"`
 	Shipping               string `json:"shipping"`
 	Makes                  string `json:"makes"`

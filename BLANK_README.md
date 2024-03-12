@@ -125,46 +125,35 @@ Follow the instructions at [IPFS kubo](https://docs.ipfs.tech/install/command-li
   ipfs --version
   ```  
 
-Postman or another similar application can be used to connect to the API endpoints.
-Installation at [Postman](https://www.postman.com/downloads/).
+Postman or another similar application can be used to connect to the API endpoints,
+installation at [Postman](https://www.postman.com/downloads/).
 
 
 ### Installation
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+
+1. Clone the repo
    ```sh
    git clone https://github.com/elliot-eriksson/Digital-Product-Passports-DPPs-federated-system.git
    ```
-3. Install NPM packages
+2. Get requirements
    ```sh
-   $ go mod init example.com/greetings
-    > go: creating new go.mod: module example.com/greetings
+    go mod init example.com/greetings
+    $ go: creating new go.mod: module example.com/greetings
+    
+    go mod tidy
+
    ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
+3. Make sure you are in the right API subfolder, run the program
+   ```go
+    go run .
    ```
 
 
-
-### Installation API ---------------->
-
+### Installation API
 
 
-
-
-
-
-
-
-
-
-
-
-For installing on AWS EC2 client.
-
-Follow AWS [installation guide.](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/get-set-up-for-amazon-ec2.html)
+For installing on AWS EC2 client follow [AWS installation guide.](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/get-set-up-for-amazon-ec2.html) 
 
 
 The following security inbound in required for yo to be able to connect to the API.

@@ -176,14 +176,16 @@ IPv4	HTTPS	    TCP	443     0.0.0.0/0
 ```
 After this is done you can start your instance.
 
-The following commands is needed to setup the server for the API on AWS EC2 instance
+The following commands is needed to setup the server for the API on AWS EC2 instance.
+
+Enter super user
 ```sh
 sudo su -l 
 ```
-to enter super user
+Update and install the webserver
 ```sh
-yum update -y   // to update the current installed extensions in linux
-yum install -y httpd // needs to get server folder
+yum update -y  
+yum install -y httpd 
 ```
 
 

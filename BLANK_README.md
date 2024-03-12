@@ -51,6 +51,7 @@
 </div>
 
 
+<a href="API documentation.pdf" class="image fit">< DOC></a>
 
 <!-- TABLE OF CONTENTS -->
 <details>

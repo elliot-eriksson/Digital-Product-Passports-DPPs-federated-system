@@ -94,6 +94,7 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 ### Built With
 
 * [![Go][Go.js]][Go-url]
+* [![IPFS][ipfs.js]][ipfs-url]
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -107,6 +108,7 @@ This is an example of how you may give instructions on setting up your project l
 To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
+[![postman][postman.js]][postman-url]
 
 This is an example of how to list things you need to use the software and how to install them.
 
@@ -122,6 +124,10 @@ Follow the instructions at [IPFS kubo](https://docs.ipfs.tech/install/command-li
   ```sh
   ipfs --version
   ```  
+
+Postman or another similar application can be used to connect to the API endpoints.
+Installation at [Postman](https://www.postman.com/downloads/).
+
 
 ### Installation
 
@@ -139,6 +145,86 @@ Follow the instructions at [IPFS kubo](https://docs.ipfs.tech/install/command-li
    ```js
    const API_KEY = 'ENTER YOUR API';
    ```
+
+
+
+### Installation API ---------------->
+
+
+
+
+
+
+
+
+
+
+
+
+
+For installing on AWS EC2 client.
+
+Follow AWS [installation guide.](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/get-set-up-for-amazon-ec2.html)
+
+
+The following security inbound in required for yo to be able to connect to the API.
+```sh
+IPv4	HTTP	    TCP	80      0.0.0.0/0	
+IPv4	SSH	        TCP	22	    0.0.0.0/0	
+IPv4	Custom TCP	TCP	8081    0.0.0.0/0	
+IPv4	HTTPS	    TCP	443     0.0.0.0/0	
+```
+After this is done you can start your instance.
+
+The following commands is needed to setup the server for the API on AWS EC2 instance
+```sh
+sudo su -l 
+```
+to enter super user
+```sh
+yum update -y   // to update the current installed extensions in linux
+yum install -y httpd // needs to get server folder
+```
+
+
+For the latest installation of Kubo IPFS for linux follow the link below
+[installation guide.](https://docs.ipfs.tech/install/command-line/#install-official-binary-distributions)
+
+Installation of golang, you will need to enter the bash file and add the export line somewhere in the document for the path to work after a restart of the server.
+```sh
+yum install golang-go  
+vi ~/.bashrc 
+export PATH=$PATH:/usr/local/go/bin
+```
+
+```sh
+cd var/www/html 
+wget "current zip for the project" 
+unzip the project
+enter the folder
+```
+
+When first entering the file ther will be some not up to date files remove them and fetch the new once
+```sh
+rm go.mod 
+rm go.sum
+go mod init go.mod
+go mod tidy 
+```
+
+Enter the API folder and initiate the ipfs daemon.
+```sh
+cd API
+ipfs init 
+```
+To start the IPFS daemon and the API
+```sh
+ipfs daemon &
+go run .
+```
+
+Important note! when restarting or shuting the tab for the webserver you will need to enter super user and manouver to /var/www/html before you can rerun the startup commands. If the dameon or the server is complaining about the locks you can enter ```ps -A``` and ```kill pid``` the jobs for ipfs and API
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -237,3 +323,7 @@ Project Link: [https://github.com/elliot-eriksson/Digital-Product-Passports-DPPs
 [Next-url]: https://golang.org/
 [Go-url]: https://golang.org/
 [Go.js]: https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white
+[postman-url]: https://golang.org/
+[postman.js]: https://img.shields.io/static/v1?style=for-the-badge&message=Postman&color=FF6C37&logo=Postman&logoColor=FFFFFF&label=
+[ipfs-url]: http://ipfs.io/
+[ipfs.js]: https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square

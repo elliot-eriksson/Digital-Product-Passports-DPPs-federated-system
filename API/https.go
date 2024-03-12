@@ -131,7 +131,9 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// Uploads the generated keys to the CA
+	// Uploads the generated keys to the CA created by https://github.com/LTU-D0020E/d0020e-project-dpp
+	// If the project is run without the CA from https://github.com/LTU-D0020E/d0020e-project-dpp this code can be removed
+	// Could be modified to use a different CA by changin the address here and in retrievePrivateKey
 	if passType == "complete" {
 		dataToCA.Cid = cid
 		postData, _ := json.Marshal(dataToCA)
@@ -214,7 +216,6 @@ func outboundCalls(body []byte, method string, address string) string {
 
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-	// fmt.Println("requesten", req)
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error Do", err)
@@ -318,6 +319,7 @@ func addMutableData(writer http.ResponseWriter, request *http.Request) {
 	// Check if local node already has the private key responding to the public key.
 	// If it does updates the IPNS record to point to new event log.
 	// Else retrieves the private key from the CA and then update IPNS
+	// If the project is run without a CA all keys need to be local
 	if checkKey(MutableData.Key) {
 		addDataToIPNS(sh, MutableData.Key, cid)
 		writer.WriteHeader(http.StatusOK)
@@ -476,6 +478,8 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 		// Check if local node already has the private key responding to the public key.
 		// If it does updates the IPNS record to point to new event log.
 		// Else retrieves the private key from the CA and then update IPNS
+		// If the project is run without a CA all keys need to be local
+
 		if checkKey(MutableData.Key) {
 			statusText, _ := addDataToIPNS(sh, MutableData.Key, cid)
 			writer.WriteHeader(http.StatusOK)
@@ -536,6 +540,7 @@ func addMutableProduct(writer http.ResponseWriter, request *http.Request) {
 		// Check if local node already has the private key responding to the public key.
 		// If it does updates the IPNS record to point to new event log.
 		// Else retrieves the private key from the CA and then update IPNS
+		// If the project is run without a CA all keys need to be local
 		if checkKey(MutableData.Key) {
 			addDataToIPNS(sh, MutableData.Key, cid)
 			writer.WriteHeader(http.StatusOK)

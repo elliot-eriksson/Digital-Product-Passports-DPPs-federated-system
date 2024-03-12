@@ -50,8 +50,8 @@
   </p>
 </div>
 
+<p><a href="API documentation.pdf">API documentation </a></p>
 
-<a href="API documentation.pdf" class="image fit">< DOC></a>
 
 <!-- TABLE OF CONTENTS -->
 <details>

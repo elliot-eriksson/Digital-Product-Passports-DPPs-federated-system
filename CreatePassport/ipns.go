@@ -153,6 +153,7 @@ func keyGenerator(keyAlias string) string {
 	return string(output)
 }
 
+// Renames the key for ipfs
 func keyRename(newAlias string) {
 	cmd := exec.Command("ipfs", "key", "rename", "tempAlias", newAlias)
 	output, err := cmd.CombinedOutput()
@@ -164,6 +165,7 @@ func keyRename(newAlias string) {
 	return
 }
 
+// Rename input LinkMakes
 func keyRenameLinkMakes(newAlias string, input string) {
 	cmd := exec.Command("ipfs", "key", "rename", input, "LinkMakes_"+newAlias)
 	output, err := cmd.CombinedOutput()

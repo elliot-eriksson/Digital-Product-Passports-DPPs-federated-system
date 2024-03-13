@@ -178,60 +178,6 @@ func dynamicPassportData() map[string]interface{} {
 	return out
 }
 
-func dynamicPassportData() map[string]interface{} {
-	out := make(map[string]interface{})
-	var ItemN, OriginN, Company string
-	var DKey, DValue, isSensitive string
-	var sensitiveArray, nonSensitiveArray []string
-	fmt.Println("Enter item name : ")
-	fmt.Scan(&ItemN)
-	fmt.Println("Enter item origin : ")
-	fmt.Scan(&OriginN)
-	fmt.Println("Enter Company : ")
-	fmt.Scan(&Company)
-
-	out["ItemName"] = ItemN
-	out["Origin"] = OriginN
-	out["Company"] = Company
-	out["LinkMadeFrom"] = LinkMadeFrom()
-	out["CreationDate"] = time.Now().Format("2006-01-02")
-	nonSensitiveArray = append(nonSensitiveArray, "Name")
-	nonSensitiveArray = append(nonSensitiveArray, "Origin")
-	nonSensitiveArray = append(nonSensitiveArray, "Company")
-	nonSensitiveArray = append(nonSensitiveArray, "LinkMadeFrom")
-	dynamicInput := "1"
-
-	for dynamicInput == "1" {
-		fmt.Println("Enter product key (Enter 0 if no more): ")
-		fmt.Scan(&DKey)
-		if DKey == "0" {
-			break
-		}
-		fmt.Println("Enter product value: ")
-		fmt.Scan(&DValue)
-
-		out[DKey] = DValue
-
-		fmt.Println("Is it sensitive? y/n: ")
-		fmt.Scan(&isSensitive)
-
-		for isSensitive != "y" && isSensitive != "n" {
-			fmt.Println("Input must be y or n")
-			fmt.Print("Is it sensitive? y/n: ")
-			fmt.Scan(&isSensitive)
-		}
-		if isSensitive == "y" {
-			sensitiveArray = append(sensitiveArray, DKey)
-		} else if isSensitive == "n" {
-			nonSensitiveArray = append(nonSensitiveArray, DKey)
-		}
-	}
-	out["sensitiveArray"] = sensitiveArray
-	out["nonSensitiveArray"] = nonSensitiveArray
-	fmt.Println("DYNAMICPASSDATA OUT ", out)
-	return out
-}
-
 // TODO: retrieve private key from CA. lmArray is an array filled with the CIDs of the products which we need to retrieve private keys for.
 func LinkMakesPointerUpdate(lmArray []string, cid string) {
 	privatekey := "k51qzi5uqu5dk2i4blnf7qwri0gf2he2cdyp10of13aqclrrdklhha1605lu0i"

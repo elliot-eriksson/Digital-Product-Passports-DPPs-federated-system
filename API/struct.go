@@ -2,35 +2,34 @@ package main
 
 // -----------------Get passport struct ----------------------
 type tmpStringClaim struct {
-	CID string `json: CID`
+	CID string `json:"CID"`
 }
 
 // -----------------Add MutableData struct ----------------------
 type httpData struct {
-	Key       string `json: Key`
-	Eventtype string `json: Eventtype`
-	Datetime  string `json: Datetime`
-	Data      string `json: Data`
+	Key       string `json:"Key"`
+	Eventtype string `json:"Eventtype"`
+	Datetime  string `json:"Datetime"`
+	Data      string `json:"Data"`
 }
 
 type ledgerData struct {
-	Eventtype string `json: Eventtype`
-	Data      string `json: Data`
-	Datetime  string `json: Datetime`
+	Eventtype string `json:"Eventtype"`
+	Data      string `json:"Data"`
+	Datetime  string `json:"Datetime"`
 }
 
 type appendEntry struct {
-	CID       string `json: CID`
-	Eventtype string `json: Eventtype`
-	// Name string `json: Name`
-	Datetime string `json: Datetime`
+	CID       string `json:"CID"`
+	Eventtype string `json:"Eventtype"`
+	Datetime  string `json:"Datetime"`
 }
 
 // ----------------- retrive Event struct ----------------------
 type chooseEvent struct {
-	Key  string `json: Key`
-	Type string `json: Type`
-	CID  string `json: CID`
+	Key  string `json:"Key"`
+	Type string `json:"Type"`
+	CID  string `json:"CID"`
 }
 type getEvent struct {
 	CID string `json:"CID"`
@@ -38,33 +37,27 @@ type getEvent struct {
 
 // ----------------- add Mutable Product struct ----------------------
 type httpDataProduct struct {
-	Key          string `json: Key`
-	CID          string `json: CID`
-	ProductType  string `json: ProductType`
-	Datetime     string `json: Datetime`
-	CIDToReplace string `json: CIDToReplace`
-}
-
-type ledgerDataProduct struct {
-	ProductType string `json: ProductType`
-	CID         string `json: CID`
-	Datetime    string `json: Datetime`
+	Key          string `json:"Key"`
+	CID          string `json:"CID"`
+	ProductType  string `json:"ProductType"`
+	Datetime     string `json:"Datetime"`
+	CIDToReplace string `json:"CIDToReplace"`
 }
 
 type appendEntryProduct struct {
-	CID         string `json: CID`
-	ProductType string `json: ProductType`
-	Datetime    string `json: Datetime`
+	CID         string `json:"CID"`
+	ProductType string `json:"ProductType"`
+	Datetime    string `json:"Datetime"`
 }
 
 // ----------------- Generate QR Code struct ----------------------
 
 type QrCode struct {
-	CID                    string `json: CID`
-	MaterialId             string `json: MaterialId`
-	OrderId                string `json: OrderId`
-	Dimensions             string `json: Dimensions`
-	Plant                  string `json: Plant`
+	CID                    string `json:"CID"`
+	MaterialId             string `json:"MaterialId"`
+	OrderId                string `json:"OrderId"`
+	Dimensions             string `json:"Dimensions"`
+	Plant                  string `json:"Plant"`
 	Remanufacturing_events string `json:"remanufacturing_events"`
 	Shipping               string `json:"shipping"`
 	Makes                  string `json:"makes"`
@@ -72,14 +65,14 @@ type QrCode struct {
 }
 
 type QrCodeImage struct {
-	Filename string `json: Filename`
-	Content  string `json: Content`
+	Filename string `json:"Filename"`
+	Content  string `json:"Content"`
 }
 
 // ----------------- retriveMutableLog api check struct -----------------------
 
 type MutableLog struct {
-	Key string `json: Key`
+	Key string `json:"Key"`
 }
 
 // ----------------- KeyPAIR request api struct -----------------------
@@ -100,10 +93,6 @@ type dataFromCa struct {
 	Success    bool   `json:"success"`
 	PrivateKey string `json:"privateKey"`
 	Message    string `json:"message"`
-}
-
-type addressToCA struct {
-	PublicKey string `json:"publicKey"`
 }
 
 type makesKey struct {

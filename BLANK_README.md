@@ -31,7 +31,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/elliot-eriksson/Digital-Product-Passports-DPPs-federated-system">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="images/dpp-logo.png" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">Digital Product Passports DPPs federated system</h3>
@@ -49,8 +49,6 @@
     <a href="https://github.com/elliot-eriksson/Digital-Product-Passports-DPPs-federated-system/issues">Request Feature</a>
   </p>
 </div>
-
-<p><a href="API documentation.pdf">API documentation </a></p>
 
 
 <!-- TABLE OF CONTENTS -->
@@ -86,6 +84,24 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
+
+This project has worked on implementing a proof of concept for a distributed federated system.
+It is designed to work for [digital product passports DPPs](https://www.protokol.com/insights/digital-product-passport-complete-guide/) \
+The distribution of data is done on the IPFS network using multiple API instances running on different machines communicating with each other. 
+
+This project had two separate developments.  
+CreatePassport, a program that could illustrate how a large company can create DPPs for its products and components.  
+
+An API that companies without their own solution can use as well as end users.
+This API supports a wider set of functions such as creating and retrieving DPPs, a more in-depth description of the API Endpoints and its features can be found in the <a href="API documentation.pdf">API documentation.</a>
+
+As of writing the API is in a working order however the program CreatePassport is not.
+
+
+
+
+
+
 Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `elliot-eriksson`, `Digital-Product-Passports-DPPs-federated-system`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `Digital-Product-Passports-DPPs-federated-system`, `project_description`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -96,6 +112,8 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 
 * [![Go][Go.js]][Go-url]
 * [![IPFS][ipfs.js]][ipfs-url]
+* [![KUBO][kubo.js]][kubo-url]
+
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -109,11 +127,10 @@ This is an example of how you may give instructions on setting up your project l
 To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
-[![postman][postman.js]][postman-url]
 
-This is an example of how to list things you need to use the software and how to install them.
+To run the project a IPFS Kubo node need to be run on the same machine as the API.
 
-Follow the instructions at [IPFS kubo](https://docs.ipfs.tech/install/command-line/#install-official-binary-distributions) for windows for mac check below.
+Follow the instructions at [IPFS kubo](https://docs.ipfs.tech/install/command-line/#install-official-binary-distributions) for windows/linux instructions for mac check below.
 
 
 * macOS
@@ -126,8 +143,10 @@ Follow the instructions at [IPFS kubo](https://docs.ipfs.tech/install/command-li
   ipfs --version
   ```  
 
+[![postman][postman.js]][postman-url]
+
 Postman or another similar application can be used to connect to the API endpoints,
-installation at [Postman](https://www.postman.com/downloads/).
+installation for [Postman](https://www.postman.com/downloads/).
 
 
 ### Installation
@@ -137,83 +156,88 @@ installation at [Postman](https://www.postman.com/downloads/).
    ```sh
    git clone https://github.com/elliot-eriksson/Digital-Product-Passports-DPPs-federated-system.git
    ```
-2. Get requirements
+2. Move into the api subfolder
    ```sh
-    go mod init example.com/greetings
-    $ go: creating new go.mod: module example.com/greetings
+    cd .\API\
+   ```
+3. Get requirements
+   ```sh
+    go mod init API
+    $ go: creating new go.mod: module API
     
     go mod tidy
 
    ```
-3. Make sure you are in the right API subfolder, run the program
+4. Make sure you are in the API subfolder, and check that the progarm can run.
    ```go
     go run .
    ```
 
 
-### Installation API
+### Installation API on AWS with EC2 service
 
 
 For installing on AWS EC2 client follow [AWS installation guide.](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/get-set-up-for-amazon-ec2.html) 
 
+1.
+    The following security inbound in required for yo to be able to connect to the API.
+    ```sh
+    IPv4	HTTP	    TCP	80      0.0.0.0/0	
+    IPv4	SSH	        TCP	22	    0.0.0.0/0	
+    IPv4	Custom TCP	TCP	8081    0.0.0.0/0	
+    IPv4	HTTPS	    TCP	443     0.0.0.0/0	
+    ```
+    After this is done you can start your instance.
 
-The following security inbound in required for yo to be able to connect to the API.
-```sh
-IPv4	HTTP	    TCP	80      0.0.0.0/0	
-IPv4	SSH	        TCP	22	    0.0.0.0/0	
-IPv4	Custom TCP	TCP	8081    0.0.0.0/0	
-IPv4	HTTPS	    TCP	443     0.0.0.0/0	
-```
-After this is done you can start your instance.
+    The following commands is needed to setup the server for the API on AWS EC2 instance.
+    Enter super user
+      ```sh
+      sudo su -l 
+      ```
+2.
+    Update and install the webserver
+    ```sh
+    yum update -y  
+    yum install -y httpd 
+    ```
 
-The following commands is needed to setup the server for the API on AWS EC2 instance.
+3.
+    For the latest installation of Kubo IPFS for linux follow the link below
+    [installation guide.](https://docs.ipfs.tech/install/command-line/#install-official-binary-distributions)
 
-Enter super user
-```sh
-sudo su -l 
-```
-Update and install the webserver
-```sh
-yum update -y  
-yum install -y httpd 
-```
+    Installation of golang, you will need to enter the bash file and add the export line somewhere in the document for the path to work after a restart of the server.
+    ```sh
+    yum install golang-go  
+    vi ~/.bashrc 
+    export PATH=$PATH:/usr/local/go/bin
+    ```
+    ```sh
+    cd var/www/html 
+    wget "current zip for the project" 
+    unzip the project
+    enter the folder
+    ```
 
-
-For the latest installation of Kubo IPFS for linux follow the link below
-[installation guide.](https://docs.ipfs.tech/install/command-line/#install-official-binary-distributions)
-
-Installation of golang, you will need to enter the bash file and add the export line somewhere in the document for the path to work after a restart of the server.
-```sh
-yum install golang-go  
-vi ~/.bashrc 
-export PATH=$PATH:/usr/local/go/bin
-```
-
-```sh
-cd var/www/html 
-wget "current zip for the project" 
-unzip the project
-enter the folder
-```
-
-When first entering the file ther will be some not up to date files remove them and fetch the new once
-```sh
-rm go.mod 
-rm go.sum
-go mod init go.mod
-go mod tidy 
-```
-
-Enter the API folder and initiate the ipfs daemon.
-```sh
-cd API
-ipfs init 
-```
-To start the IPFS daemon and the API
-```sh
-ipfs daemon &
-go run .
-```
+4.
+    When first entering the file ther will be some not up to date files remove them and fetch the new once
+      ```sh
+      rm go.mod 
+      rm go.sum
+      go mod init go.mod
+      go mod tidy 
+      ```
+5.    
+    Enter the API folder and initiate the ipfs daemon.
+    ```sh
+    cd API
+    ipfs init 
+    ```
+6.
+    To start the IPFS daemon and the API
+    ```sh
+    ipfs daemon &
+    go run .
+    ```
 
 Important note! when restarting or shuting the tab for the webserver you will need to enter super user and manouver to /var/www/html before you can rerun the startup commands. If the dameon or the server is complaining about the locks you can enter ```ps -A``` and ```kill pid``` the jobs for ipfs and API
 
@@ -225,9 +249,12 @@ Important note! when restarting or shuting the tab for the webserver you will ne
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+For usage of the API check out the <a href="API-documentation.pdf">API documentation. </a>
+
+For the CreatePassport program since its current iteration is not compatible with the new structure created during the development of the API.  
+Changes need to be done to the program speicficaly to dynamicPassportData, LinkMadeFrom and how it handles sensitivedata before it can be used.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -317,5 +344,7 @@ Project Link: [https://github.com/elliot-eriksson/Digital-Product-Passports-DPPs
 [Go.js]: https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white
 [postman-url]: https://golang.org/
 [postman.js]: https://img.shields.io/static/v1?style=for-the-badge&message=Postman&color=FF6C37&logo=Postman&logoColor=FFFFFF&label=
-[ipfs-url]: http://ipfs.io/
-[ipfs.js]: https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square
+[ipfs-url]:https://ipfs.tech/
+https://ihttps://img.shields.io/badge/IPFS-Kubo-blue?style=for-the-badge&logo=ipfs&logoColor=%2365C2CB&labelColor=%235B5B5B&color=%2365C2CB
+
+https:/https://img.shields.io/badge/IPFS-Kubo-blue?style=for-the-badge&logo=ipfs&logoColor=%2365C2CB&labelColor=%235B5B5B&color=%2365C2CB[kubo-url]: https://ipfs.tech/[kubo.js]: https://img.shields.io/badge/IPFS-IPFS-blue?style=for-the-badge&logo=ipfs&logoColor=%2365C2CB&labelColor=%235B5B5B&color=blue[ipfs.js]: https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square

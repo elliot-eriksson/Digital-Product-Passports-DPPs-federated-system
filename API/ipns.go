@@ -8,6 +8,7 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 )
 
+// Imports a ipns key from a pem file, to the local Kubo node.
 func importPEM(publicKey, filePath string) (string, error) {
 	cmd := exec.Command("ipfs", "key", "import", publicKey, "-f", "pem-pkcs8-cleartext", filePath)
 	output, err := cmd.CombinedOutput()
@@ -24,6 +25,7 @@ func splitListContent(Content string) ([]string, int) {
 	return temp, lenvar
 }
 
+// Retrieves the given IPNS public keys content.
 func catRemanContent(key string) string {
 	cmd := exec.Command("ipfs", "cat", ipnsKeyToCMD(key))
 	output, err := cmd.CombinedOutput()
@@ -83,14 +85,13 @@ func keyGenerator(keyAlias string) string {
 	return string(output)
 }
 
+// Renames the given IPNS key
 func keyRename(oldAlias, newAlias string) {
 	cmd := exec.Command("ipfs", "key", "rename", oldAlias, newAlias)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(string(output))
-		return
 	}
-	return
 }
 
 // Find out to what public key the CID is pointing to.

@@ -120,6 +120,11 @@ func createPassportHandler(writer http.ResponseWriter, request *http.Request) {
 	madeby["Made_by"] = passportData["Made_by"]
 	delete(passportData, "Made_by")
 	output, err := json.Marshal(passportData)
+	if err != nil {
+		fmt.Println("Error Marshal passportData createPassportHandler:124", err)
+		http.Error(writer, "Error in passportData", http.StatusInternalServerError)
+		return
+	}
 
 	sh := shell.NewShell("localhost:5001")
 	// Uploads the passport to IPFS, with all information contained in the call except the Made_by and Type fields.

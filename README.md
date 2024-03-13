@@ -23,7 +23,7 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
+
 
 
 
@@ -31,7 +31,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/elliot-eriksson/Digital-Product-Passports-DPPs-federated-system">
-    <img src="images/dpp-logo.png" alt="Logo" width="80" height="80">
+    <img src="images/logo.png" alt="Logo" width="2000" height="80">
   </a>
 
 <h3 align="center">Digital Product Passports DPPs federated system</h3>
@@ -81,8 +81,6 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
 
 This project has worked on implementing a proof of concept for a distributed federated system.
 It is designed to work for digital product passports DPPs \
@@ -330,14 +328,14 @@ Project Link: [https://github.com/elliot-eriksson/Digital-Product-Passports-DPPs
 [license-url]: https://github.com/elliot-eriksson/Digital-Product-Passports-DPPs-federated-system/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/linkedin_username
-[product-screenshot]: images/screenshot.png
+[product-screenshot]: images/product-screenshot.png
 [Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
 [Next-url]: https://golang.org/
 [Go-url]: https://golang.org/
 [Go.js]: https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white
-[postman-url]: https://golang.org/
+[postman-url]: https://www.postman.com/
 [postman.js]: https://img.shields.io/static/v1?style=for-the-badge&message=Postman&color=FF6C37&logo=Postman&logoColor=FFFFFF&label=
 [ipfs-url]:https://ipfs.tech/
 [ipfs.js]: https://img.shields.io/badge/IPFS-Kubo-blue?style=for-the-badge&logo=ipfs&logoColor=%2365C2CB&labelColor=%235B5B5B&color=%2365C2CB
-[kubo-url]: https://ipfs.tech/
+[kubo-url]: https://github.com/ipfs/kubo
 [kubo.js]: https://img.shields.io/badge/IPFS-IPFS-blue?style=for-the-badge&logo=ipfs&logoColor=%2365C2CB&labelColor=%235B5B5B&color=blue

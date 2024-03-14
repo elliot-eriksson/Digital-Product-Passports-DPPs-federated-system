@@ -85,7 +85,7 @@ func keyGenerator(keyAlias string) string {
 	return string(output)
 }
 
-// Renames the given IPNS key
+// Renames the given IPNS key with a new one.
 func keyRename(oldAlias, newAlias string) {
 	cmd := exec.Command("ipfs", "key", "rename", oldAlias, newAlias)
 	output, err := cmd.CombinedOutput()

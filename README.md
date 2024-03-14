@@ -37,7 +37,7 @@
 <h3 align="center">Digital Product Passports DPPs federated system</h3>
 
   <p align="center">
-    project_description
+    A digital passport for products 
     <br />
     <a href="https://github.com/elliot-eriksson/Digital-Product-Passports-DPPs-federated-system"><strong>Explore the docs »</strong></a>
     <br />

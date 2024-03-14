@@ -31,7 +31,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/elliot-eriksson/Digital-Product-Passports-DPPs-federated-system">
-    <img src="images/logo.png" alt="Logo" width="2000" height="80">
+    <img src="images/logo.png" alt="Logo" width="300" height="70">
   </a>
 
 <h3 align="center">Digital Product Passports DPPs federated system</h3>

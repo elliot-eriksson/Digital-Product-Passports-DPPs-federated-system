@@ -69,11 +69,9 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
 
@@ -257,7 +255,8 @@ See the [open issues](https://github.com/elliot-eriksson/Digital-Product-Passpor
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See <a href="LICENSE.txt">```LICENSE.txt``` </a>  for more information.
+Distributed under the MIT License.  
+See <a href="LICENSE.txt">```LICENSE.txt``` </a>  for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

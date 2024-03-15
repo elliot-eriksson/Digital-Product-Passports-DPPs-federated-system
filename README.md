@@ -87,7 +87,7 @@ This project had two separate developments.
 CreatePassport, a program that could illustrate how a large company can create DPPs for its products and components.
 
 An API that companies without their own solution can use as well as end users.
-This API supports a wider set of functions such as creating and retrieving DPPs, a more in-depth description of the API Endpoints and its features can be found in the <a href="API documentation.pdf">API documentation.</a>
+This API supports a wider set of functions such as creating and retrieving DPPs, a more in-depth description of the API Endpoints and its features can be found in the <a href="API-documentation.pdf">API documentation.</a>
 
 As of writing the API is in a working order however the program CreatePassport is not.
 

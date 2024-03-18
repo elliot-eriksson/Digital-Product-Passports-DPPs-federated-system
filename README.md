@@ -229,7 +229,7 @@ For installing on AWS EC2 client follow [AWS installation guide.](https://docs.a
     go run .
     ```
 
-_Important note! when restarting or shuting the tab for the webserver you will need to enter super user and manouver to ```/var/www/html``` before you can rerun the startup commands. If the dameon or the server is complaining about the locks you can enter ```ps -A``` and ```kill pid``` the jobs for ipfs and API_
+_Important note! when restarting or shutting the tab for the webserver you will need to enter super user and manouver to ```/var/www/html``` before you can rerun the startup commands. If the dameon or the server is complaining about the locks you can enter ```ps -A``` and ```kill pid``` the jobs for ipfs and API_
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
